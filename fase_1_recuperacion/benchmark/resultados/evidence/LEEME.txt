@@ -1,0 +1,18 @@
+EVIDENCIAS - FASE 1
+
+informe_resultados.pdf: informe de resultados reales con integrantes pendientes.
+comparison.tsv: promedios de las 18 configuraciones sobre el benchmark propuesto.
+description_unigram_tfidf/: referencia del informe (rankings, textos completos,
+consultas normalizadas, metricas y salida original del evaluador).
+Las otras 17 carpetas siguen el mismo formato.
+normalization_output.txt: salida real de la normalizacion del corpus.
+requirements-lock.txt: versiones del entorno de ejecucion.
+manifest.json: hashes de las entradas utilizadas.
+instructor_sample_results.tsv: prueba separada con archivos DE MUESTRA del profesor;
+NO son los resultados del corpus del proyecto.
+
+El benchmark en ../benchmark/ fue propuesto con asistencia de IA antes de los
+rankings y requiere revision del equipo. No son juicios humanos confirmados.
+No modificar juicios para mejorar las metricas. Si se corrigen errores de
+anotacion, ejecutar nuevamente el benchmark y construir nuevamente el PDF.
+No se ha subido a una plataforma escolar; el ZIP se genera para revision local.

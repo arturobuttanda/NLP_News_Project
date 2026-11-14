@@ -1,0 +1,15 @@
+=== TABLA DE CONTINGENCIA (CLÚSTER VS CATEGORÍA GOLD) ===
+
+category    ciencia  cultura_espectaculos  deportes  economia  medio_ambiente  mundo_conflictos  politica  salud  sociedad  tecnologia_ia   All
+cluster_id                                                                                                                                     
+0                 0                     0        25         0               0                 0         0      0         0              0    25
+1               381                   350       320       297             201               229       257    216       234            225  2710
+2                 0                     0         0         0               0                 0         0     38         0              0    38
+3                 0                     0         0         0               0                 3         8      0         3              1    15
+4                 0                     0         0         0               0                 5         5      0         2              1    13
+5               124                     0         0         0               0                 0         0      0         0              0   124
+6                 0                     0         0        11               0                 5         1      0         3             20    40
+7                 5                     1         1        12               7                44        63     10        16             16   175
+8                 6                     0         0         3              71                 2         3      0         4              3    92
+9                 0                     0         0         0               0                 0         0      0         0             19    19
+All             516                   351       346       323             279               288       337    264       262            285  3251

@@ -1,0 +1,62 @@
+============================================================
+INICIANDO PIPELINE DE NORMALIZACIÓN DE CORPUS (INGLÉS)
+============================================================
+
+[1/6] Cargando modelo en_core_web_sm de spaCy...
+Modelo cargado exitosamente en 1.28s.
+Componentes activos en pipeline: ['tok2vec', 'tagger', 'attribute_ruler', 'lemmatizer']
+
+[2/6] Leyendo corpus crudo desde: /Users/diamandazurita/Downloads/proyecto pnl/NLP/data/raw/news_raw_corpus.tsv
+Total de registros ingestados: 2157
+Columnas: ['id', 'title', 'description', 'source', 'category', 'date', 'url', 'retrieved_at']
+
+[3/6] Normalizando titulares ('title') con nlp.pipe...
+Titulares normalizados en 5.03s.
+
+[4/6] Normalizando descripciones ('description') con nlp.pipe...
+Descripciones normalizadas en 15.09s.
+
+[5/6] Guardando corpus normalizado en: /Users/diamandazurita/Downloads/proyecto pnl/NLP/data/processed/news_normalized_corpus_en.tsv
+Archivo guardado exitosamente.
+Registros finales: 2157
+
+[6/6] Muestras de Verificación (Original vs Normalizado):
+
+-------------------------------------------------------
+[ID: N0001 | Fuente: BBC News | Cat: politica]
+TÍTULO RAW:   Ex-top official Robbins reaches settlement with government over sacking
+TÍTULO NORM:  ex top official robbins reach settlement government sack
+DESC RAW:     Sir Olly Robbins was sacked as the top civil servant in the Foreign Office over the vetting of Lord Mandelson. ...
+DESC NORM:    sir olly robbins sack top civil servant foreign office vetting lord mandelson ...
+
+-------------------------------------------------------
+[ID: N0002 | Fuente: BBC News | Cat: politica]
+TÍTULO RAW:   Burnham invites Swinney to work together on 'deeper Scottish devolution'
+TÍTULO NORM:  burnham invite swinney work together deep scottish devolution
+DESC RAW:     On his first substantive trip to Scotland since becoming PM, he says politicians should focus on solutions "right now" a ...
+DESC NORM:    first substantive trip scotland become pm say politician focus solution right now move issue scottish independence ...
+
+-------------------------------------------------------
+[ID: N0003 | Fuente: BBC News | Cat: politica]
+TÍTULO RAW:   Police assess Palestine Action post by national security adviser's wife
+TÍTULO NORM:  police assess palestine action post national security adviser wife
+DESC RAW:     Downing Street says Sarah Helm, the wife of Jonathan Powell, "does not represent the government in any capacity". ...
+DESC NORM:    downing street say sarah helm wife jonathan powell represent government capacity ...
+
+-------------------------------------------------------
+[ID: N0046 | Fuente: The Guardian | Cat: politica]
+TÍTULO RAW:   ‘Austerity is inevitably painful’: How Michael Gove justifies his politics | Radical Thinking with Aditya Chakrabortty – podcast
+TÍTULO NORM:  austerity inevitably painful michael gove justify politic radical thinking aditya chakrabortty podcast
+DESC RAW:     For more than three decades, Michael Gove has been a leading figure in British Conservatism. As a journalist, government ...
+DESC NORM:    more three decade michael gove lead figure british conservatism journalist government minister now editor tory bible spe ...
+
+-------------------------------------------------------
+[ID: N0101 | Fuente: Politico | Cat: politica]
+TÍTULO RAW:   Even Trump voters think Republicans should split from the president to win
+TÍTULO NORM:  even trump voter think republicans split president win
+DESC RAW:     A new POLITICO Poll found a notable 26% of people who backed Trump in 2024 were ready for GOP candidates to take that le ...
+DESC NORM:    new politico poll find notable 26 people back trump 2024 ready gop candidate take leap ...
+
+============================================================
+PIPELINE COMPLETADO EXITOSAMENTE EN 21.49 SEGUNDOS.
+============================================================

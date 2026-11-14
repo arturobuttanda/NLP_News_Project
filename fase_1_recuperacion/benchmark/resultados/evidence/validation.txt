@@ -1,0 +1,5 @@
+PASS: 15 queries, 180 judgments, 18 configurations, 2700 ranked rows.
+PASS: rank order, scores, query coverage, evaluator metrics and means.
+PASS: hand-checked ideal nDCG, P@10, RR and zero-hit recall.
+PASS: PDF readable (11 pages); pending names and error cases included.
+PASS: official normalized corpus filename matches active corpus.

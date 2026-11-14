@@ -1,0 +1,16 @@
+query_id	query	normalized_query	elapsed_seconds	vocab_size
+Q01	cancer research and treatment	cancer research treatment	0.452	53382
+Q02	NASA space missions and telescopes	nasa space mission telescope	0.0129	53382
+Q03	inflation and interest rates	inflation interest rate	0.0122	53382
+Q04	Ukraine war and international support	ukraine war international support	0.0123	53382
+Q05	climate change impacts and risks	climate change impact risk	0.0107	53382
+Q06	medical advances against malignant disease	medical advance malignant disease	0.0118	53382
+Q07	astronaut voyages and observations of distant worlds	astronaut voyage observation distant world	0.0117	53382
+Q08	rising consumer prices and central bank responses	rise consumer price central bank response	0.0106	53382
+Q09	Kyiv allies and Moscow military pressure	kyiv ally moscow military pressure	0.0108	53382
+Q10	warming world threatens ecosystems and livelihoods	warm world threaten ecosystem livelihood	0.0133	53382
+Q11	helping patients survive uncontrolled cell growth	help patient survive uncontrolled cell growth	0.0121	53382
+Q12	humanity exploring beyond our home planet	humanity explore home planet	0.0099	53382
+Q13	why household purchasing power keeps shrinking	household purchasing power keep shrink	0.0127	53382
+Q14	foreign backing for a country resisting its invading neighbor	foreign backing country resist invade neighbor	0.0121	53382
+Q15	a hotter planet endangering living things and human prosperity	hotter planet endangering live thing human prosperity	0.013	53382

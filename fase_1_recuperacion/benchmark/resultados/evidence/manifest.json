@@ -1,0 +1,104 @@
+{
+  "python": "3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 15.0.0 (clang-1500.1.0.2.5)]",
+  "configurations": [
+    [
+      "title",
+      "unigram",
+      "frequency"
+    ],
+    [
+      "title",
+      "unigram",
+      "binary"
+    ],
+    [
+      "title",
+      "unigram",
+      "tfidf"
+    ],
+    [
+      "title",
+      "bigram",
+      "frequency"
+    ],
+    [
+      "title",
+      "bigram",
+      "binary"
+    ],
+    [
+      "title",
+      "bigram",
+      "tfidf"
+    ],
+    [
+      "title",
+      "both",
+      "frequency"
+    ],
+    [
+      "title",
+      "both",
+      "binary"
+    ],
+    [
+      "title",
+      "both",
+      "tfidf"
+    ],
+    [
+      "description",
+      "unigram",
+      "frequency"
+    ],
+    [
+      "description",
+      "unigram",
+      "binary"
+    ],
+    [
+      "description",
+      "unigram",
+      "tfidf"
+    ],
+    [
+      "description",
+      "bigram",
+      "frequency"
+    ],
+    [
+      "description",
+      "bigram",
+      "binary"
+    ],
+    [
+      "description",
+      "bigram",
+      "tfidf"
+    ],
+    [
+      "description",
+      "both",
+      "frequency"
+    ],
+    [
+      "description",
+      "both",
+      "binary"
+    ],
+    [
+      "description",
+      "both",
+      "tfidf"
+    ]
+  ],
+  "top_k": 10,
+  "documents": 2157,
+  "queries": 15,
+  "sha256": {
+    "NLP/benchmark/queries.tsv": "2aaf20ea06789a651e09574d181a698a3251aaf7ea48ca6ea198077326b89603",
+    "/Users/diamandazurita/Downloads/proyecto pnl/NLP/data/raw/news_raw_corpus.tsv": "ce0c2c445cc76f118b5139c64f502fbb2eb0c7e1e6c1d325d09bea2ecda4026a",
+    "/Users/diamandazurita/Downloads/proyecto pnl/NLP/data/processed/news_normalized_corpus_en.tsv": "76ccc33fb17a30cffe8853f2c9ccf646c163f04260e10b43e50b53a05a1949c8",
+    "NLP/benchmark/qrels.tsv": "a0a2411e21c2751d61babe5b6288b85c9d2b1ade39e8659f3702df0a3e81041a"
+  }
+}
