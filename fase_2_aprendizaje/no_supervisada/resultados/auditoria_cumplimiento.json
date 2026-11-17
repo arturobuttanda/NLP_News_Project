@@ -1,0 +1,207 @@
+{
+  "scope": "Tarea B K-Means; auditoría sin reentrenar ni elegir otra configuración",
+  "checks": [
+    {
+      "check": "IDs y artículos de etapa I preservados",
+      "status": "OK",
+      "evidence": "Los 2157 registros originales permanecen idénticos en el corpus ampliado de 4645"
+    },
+    {
+      "check": "Texto y etiquetas del corpus original",
+      "status": "OK",
+      "evidence": "4645 coincidencias exactas de ID, title + description y category"
+    },
+    {
+      "check": "Copia de entrada y resultado",
+      "status": "OK",
+      "evidence": "datos/labeled_documents.tsv = resultados/labeled_documents.tsv"
+    },
+    {
+      "check": "Particiones reproducibles 70/15/15",
+      "status": "OK",
+      "evidence": "Reconstrucción independiente con train_test_split, shuffle=True, random_state=0 y estratificación"
+    },
+    {
+      "check": "Todas las clases en cada partición",
+      "status": "OK",
+      "evidence": "Diez categorías presentes en train, dev y test"
+    },
+    {
+      "check": "Huella del corpus",
+      "status": "OK",
+      "evidence": "SHA-256 de los datos coincide con la corrida registrada"
+    },
+    {
+      "check": "Bitácora de selección",
+      "status": "OK",
+      "evidence": "91 IDs únicos; único algoritmo de clustering: KMeans"
+    },
+    {
+      "check": "Normalizaciones y representaciones",
+      "status": "OK",
+      "evidence": "Tres normalizaciones y tres representaciones efectivamente ejecutadas"
+    },
+    {
+      "check": "N-gramas y dimensiones SVD",
+      "status": "OK",
+      "evidence": "Unigramas; uni+bi; uni+bi+tri; sin SVD y SVD 50/100/150"
+    },
+    {
+      "check": "Hiperparámetros explorados",
+      "status": "OK",
+      "evidence": "Valores reales leídos de la tabla, no solo declarados en el código"
+    },
+    {
+      "check": "Regla de admisibilidad",
+      "status": "OK",
+      "evidence": "Se recalcula ocupación y umbrales a partir de las métricas guardadas"
+    },
+    {
+      "check": "Ganador en dev",
+      "status": "OK",
+      "evidence": "KM083 es el máximo admisible en dev; no se incorpora test al ranking"
+    },
+    {
+      "check": "Estabilidad dev",
+      "status": "OK",
+      "evidence": "Tres semillas, tres pares ARI entre particiones; sin gold labels"
+    },
+    {
+      "check": "Esquema de asignaciones",
+      "status": "OK",
+      "evidence": "Esquema exacto solicitado para clustering_results.tsv"
+    },
+    {
+      "check": "Matriz léxica train",
+      "status": "OK",
+      "evidence": "3251 filas alineadas por ID y 20050 términos; igualdad completa de conteos"
+    },
+    {
+      "check": "Modelo y asignaciones train",
+      "status": "OK",
+      "evidence": "El artefacto persistido reproduce las asignaciones de la matriz guardada"
+    },
+    {
+      "check": "Silhouette guardado train",
+      "status": "OK",
+      "evidence": "Recálculo de la misma métrica sobre las mismas asignaciones; sin modificar parámetros"
+    },
+    {
+      "check": "Matriz léxica dev",
+      "status": "OK",
+      "evidence": "697 filas alineadas por ID y 20050 términos; igualdad completa de conteos"
+    },
+    {
+      "check": "Modelo y asignaciones dev",
+      "status": "OK",
+      "evidence": "El artefacto persistido reproduce las asignaciones de la matriz guardada"
+    },
+    {
+      "check": "Silhouette guardado dev",
+      "status": "OK",
+      "evidence": "Recálculo de la misma métrica sobre las mismas asignaciones; sin modificar parámetros"
+    },
+    {
+      "check": "Matriz léxica test",
+      "status": "OK",
+      "evidence": "697 filas alineadas por ID y 20050 términos; igualdad completa de conteos"
+    },
+    {
+      "check": "Modelo y asignaciones test",
+      "status": "OK",
+      "evidence": "El artefacto persistido reproduce las asignaciones de la matriz guardada"
+    },
+    {
+      "check": "Silhouette guardado test",
+      "status": "OK",
+      "evidence": "Recálculo de la misma métrica sobre las mismas asignaciones; sin modificar parámetros"
+    },
+    {
+      "check": "Vocabulario reajustado con train + dev",
+      "status": "OK",
+      "evidence": "Un vectorizador independiente ajustado solo en train+dev reproduce exactamente el vocabulario final"
+    },
+    {
+      "check": "Diez términos en el espacio original",
+      "status": "OK",
+      "evidence": "Coincidencia exacta con los centroides reconstruidos desde SVD, no con componentes latentes"
+    },
+    {
+      "check": "Representantes del grupo 0",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 1",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 2",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 3",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 4",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 5",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 6",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 7",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 8",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 9",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 10",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Representantes del grupo 11",
+      "status": "OK",
+      "evidence": "Dos noticias de train+dev más cercanas a su propio centroide, por distancia euclidiana"
+    },
+    {
+      "check": "Eventos y grupos correctos",
+      "status": "OK",
+      "evidence": "Tres ejemplos de eventos contrastados por ID con las asignaciones reales"
+    },
+    {
+      "check": "PDF y figuras existentes",
+      "status": "OK",
+      "evidence": "Se verificó además la extracción de texto del PDF en la revisión documental"
+    }
+  ],
+  "total_ok": 39,
+  "technical_status": "PASS",
+  "documentary_limits": [
+    "La etapa II completa también exige supervisada e informe general integrado.",
+    "Los temas no son puros y la calidad es modesta: limitaciones documentadas, no garantía de calificación."
+  ],
+  "authorship": "Elaboración conjunta de todos los integrantes del equipo, según confirmación de la usuaria."
+}

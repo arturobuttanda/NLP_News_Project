@@ -1,0 +1,4 @@
+document_a	document_b	cluster_a	cluster_b	same_cluster	interpretation
+N2256	N2295	2	2	True	Ambos textos describen la presentación por Thomas Massie de artículos de impeachment contra Pete Hegseth. NPR y CBS quedan juntos en el grupo 2: evidencia favorable de un evento compartido entre fuentes.
+N2250	N2256	5	2	False	La versión en video de The Guardian de la presentación de los artículos queda en el grupo 5, mientras NPR queda en el 2. El formato y boilerplate pueden separar coberturas de un mismo evento.
+N1635	N1637	11	5	False	Ambos textos del corpus describen la restauración de Starlink en Ucrania tras contactos de Streeting con Hegseth. Quedan en grupos 11 y 5: otro ejemplo de separación por vocabulario y estilo.

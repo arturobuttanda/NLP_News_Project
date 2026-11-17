@@ -1,0 +1,47 @@
+{
+  "seed": 0,
+  "normalizations": [
+    "minima",
+    "sin_stopwords",
+    "lemas"
+  ],
+  "representations": [
+    "binaria",
+    "frecuencia",
+    "tfidf"
+  ],
+  "ngrams": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      1,
+      3
+    ]
+  ],
+  "k": [
+    4,
+    8,
+    12
+  ],
+  "stage1_svd": 100,
+  "vectorizer": {
+    "min_df": 2,
+    "max_df": 0.95,
+    "max_features": 30000
+  },
+  "distance": "euclidean after SVD (if used) and L2 normalization",
+  "selection": "All k dev clusters occupied; min share >= 0.01; max share <= 0.65; then maximum unrounded dev silhouette, stable ID tie break. If no admissible trial, halt before test.",
+  "stages": [
+    "81 factorial trials",
+    "SVD none/50/150 and k 6/10 around stage-1 winner",
+    "n_init/init/max_iter one-factor comparisons",
+    "seed stability 0/1/2, fixed selected parameters"
+  ],
+  "source_sha256": "23a6a170f9a908c411e8a9988e6da1615a22338ab49ebef6c97762bf94dd455a"
+}

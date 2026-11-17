@@ -1,0 +1,372 @@
+{
+  "1": {
+    "explicacion": [
+      "Un corpus es la colección de noticias que utilizamos como datos. Aquí cada noticia conserva un identificador, por ejemplo N2256. Ese ID permite seguir el mismo documento desde el archivo original hasta el cluster asignado: el modelo trabaja con números, pero nosotros podemos regresar al texto gracias al ID.",
+      "El profesor establece que la entrada sea título + descripción. Por eso no entrenamos con la URL, el nombre de la fuente ni la categoría. load_documents() lee dos TSV y los cruza por identificador. El cruce uno a uno evita que un mismo ID produzca varias filas por un duplicado. Después assert comprueba que el texto y la categoría correspondan al original.",
+      "Hay dos revisiones diferentes: la lectura del programa comprueba integridad de las 4645 noticias; la auditoría también compara las primeras 2157 noticias de etapa I con el corpus ampliado para verificar que no se sustituyeron sus registros. Esta validación detecta errores de los datos: todavía no mide qué tan buenos son los clusters."
+    ],
+    "ejemplo": "Ejemplo ilustrativo: título=\"New cancer study\" y descripción=\"Researchers test a treatment\" producen \"New cancer study Researchers test a treatment\". La URL se conserva para consultar la noticia, pero no se concatena al texto del modelo.",
+    "lectura_codigo": [
+      "pd.read_csv(..., sep=\"\\t\") lee una tabla separada por tabuladores.",
+      "document_id.is_unique comprueba que los IDs no se repitan.",
+      "merge(..., validate=\"one_to_one\") exige una noticia por ID a ambos lados.",
+      "assert compara el texto ya guardado con title + espacio + description.",
+      "Si un assert falla, el programa se detiene; no inventa datos ni continúa ocultando el error."
+    ],
+    "para_exponer": "Primero comprobamos que cada noticia conserve su ID y que la entrada sea exactamente título más descripción; así sabemos qué documento representa cada fila."
+  },
+  "2": {
+    "explicacion": [
+      "Train, dev y test son tres conjuntos de documentos distintos. Train es el material con el que se aprende. Dev sirve para comparar configuraciones sin entrenarlas con esas noticias. Test se reserva para informar el resultado final una vez que la elección ya está cerrada.",
+      "Nuestro módulo no vuelve a repartir el corpus al entrenar: toma la columna split que ya existe y que comparte con la supervisada. La auditoría reconstruye el reparto por separado para comprobarlo. Primero deja 70% en train y 30% restante; después divide ese 30% por mitad. Se obtienen 3251, 697 y 697 noticias, respectivamente.",
+      "shuffle=True mezcla las filas; random_state=0 hace reproducible la mezcla. stratify conserva aproximadamente la proporción de categorías. Usar la categoría para estratificar el reparto no equivale a enseñarle la categoría a K-Means: el ajuste posterior recibe únicamente los vectores de texto. No basta con que los tamaños coincidan: también se comprueba qué IDs quedaron en cada conjunto."
+    ],
+    "ejemplo": "Piensa en preparar un examen: train es el material de práctica, dev un examen de ensayo para comparar estrategias y test la evaluación final que no utilizas para escoger la estrategia.",
+    "lectura_codigo": [
+      "docs[docs.split == \"train\"] selecciona únicamente filas de entrenamiento.",
+      "reset_index(drop=True) renumera las posiciones locales sin cambiar document_id.",
+      "train_test_split(... test_size=.30) aparta el 30% restante.",
+      "La segunda división usa test_size=.50 sobre ese restante.",
+      "check compara los nombres de partición reconstruidos con los splits reales."
+    ],
+    "para_exponer": "Conservamos el reparto 70/15/15 del equipo y comprobamos que sea reproducible con semilla 0, sin mezclar documentos entre conjuntos."
+  },
+  "3": {
+    "explicacion": [
+      "No supervisado significa que el algoritmo no recibe una respuesta correcta para cada noticia durante el ajuste. En clasificación se entrenaría con texto y categoría. Aquí K-Means recibe solamente Xtr, la matriz numérica de train; no recibe una columna category ni un vector y de etiquetas.",
+      "Las filas representan noticias y las columnas características de texto. El número que devuelve K-Means, por ejemplo cluster 2, es un identificador interno del grupo; no significa automáticamente política ni coincide por obligación con una categoría del RSS. Nosotros proponemos un nombre leyendo palabras y noticias después.",
+      "fit_transform(tr) aprende el vocabulario y, si corresponde, el IDF y la reducción SVD con train. transform(dv) utiliza esos objetos ya aprendidos para representar dev. Si se hiciera fit_transform(dv), dev modificaría la representación y la comparación dejaría de estar aislada: eso sería fuga de información."
+    ],
+    "ejemplo": "En esta corrida N2256 queda en cluster 2. El número 2 no fue proporcionado por el profesor como etiqueta; surgió del agrupamiento. El tema de política estadounidense se interpreta después.",
+    "lectura_codigo": [
+      "normalized[modo] contiene dos listas de texto: train y dev.",
+      "fp.fit_transform(tr) aprende las transformaciones con train.",
+      "fp.transform(dv) aplica las mismas transformaciones a dev.",
+      "kmeans(cfg).fit(Xtr) ajusta los centros sin pasar categorías.",
+      "km.predict(Xdv) asigna dev a los centros ya aprendidos."
+    ],
+    "para_exponer": "Las etiquetas siguen en el archivo para análisis externo, pero no se entregan al entrenamiento ni al selector de configuraciones."
+  },
+  "4": {
+    "explicacion": [
+      "La normalización lingüística modifica el texto antes de contar términos. La comparación necesita una base mínima para saber si los pasos adicionales realmente ayudan. minima devuelve el texto tal como llegó a esta etapa; luego el vectorizador lo convierte a minúsculas y tokeniza.",
+      "sin_stopwords tokeniza y quita palabras de la lista inglesa de scikit-learn, como artículos y conectores frecuentes. No quita automáticamente frases editoriales como Continue reading. lemas primero limpia algunas fórmulas de texto y después usa spaCy para obtener lemas y filtrar ciertas clases gramaticales, como pronombres y auxiliares.",
+      "Estas variantes no son idénticas salvo por una sola operación: lemas combina limpieza, lematización y filtrado POS. Por eso hay que describirla completa y no decir que cualquier diferencia se debe únicamente a lematizar. La transformación es fija, no aprende frecuencias del conjunto completo; el aprendizaje del vocabulario ocurre después en train."
+    ],
+    "ejemplo": "Ejemplo ilustrativo: una variante puede dejar \"the researchers are studying\", otra filtrar palabras de función y otra llevar \"researchers\" a \"researcher\". No usamos estos ejemplos como resultados medidos del corpus.",
+    "lectura_codigo": [
+      "self.modo decide qué rama de transform() se aplica.",
+      "minima devuelve list(X).",
+      "sin_stopwords usa tokenizar y ENGLISH_STOP_WORDS.",
+      "limpiar_texto aplica las reglas de limpieza de boilerplate.",
+      "cargar_spacy().pipe procesa textos por lotes; lematizar revisa token.lemma_ y token.pos_."
+    ],
+    "para_exponer": "Probamos tres niveles de procesamiento: una base mínima, quitar stopwords y una variante con limpieza y lemas; explicamos exactamente qué cambia en cada una."
+  },
+  "5": {
+    "explicacion": [
+      "El modelo no entiende directamente una oración como una persona. El vectorizador transforma cada noticia en una fila numérica usando un vocabulario de términos. Binaria solo registra si un término aparece; frecuencia registra cuántas veces aparece; TF-IDF combina frecuencia con una ponderación que reduce la importancia relativa de términos extendidos por muchos documentos.",
+      "Un n-grama es una secuencia de n tokens consecutivos. (1,1) usa unigramas; (1,2) incluye unigramas y bigramas; (1,3) incluye unigramas, bigramas y trigramas. El primer número no significa el número de clusters. Los n-gramas se generan dentro del vectorizador, antes de construir la matriz.",
+      "min_df=2 exige presencia en al menos dos documentos de ajuste. max_df=.95 excluye términos presentes en más del 95% de esos documentos. max_features=30000 limita el vocabulario. Son controles de tamaño y ruido, no valores ganadores seleccionados por separado. La cantidad final de columnas se consulta en vocabulario.tsv y en las matrices, no se supone que siempre se alcance el límite de 30000.",
+      "La palabra binaria describe la matriz léxica de presencia/ausencia. Después de SVD y L2 los números pueden dejar de ser 0 o 1; eso es esperado. Las matrices X_words_*.npz conservan la representación léxica anterior a esas transformaciones, mientras K-Means usa el espacio transformado."
+    ],
+    "ejemplo": "Con \"cancer cancer treatment\", frecuencia produce cancer=2 y treatment=1; binaria produce 1 y 1. Con \"climate change today\", (1,2) incluye climate, change, today, climate change y change today.",
+    "lectura_codigo": [
+      "opts reúne los parámetros comunes a las tres representaciones.",
+      "TfidfVectorizer se usa si representation es tfidf.",
+      "CountVectorizer(binary=True) crea presencia/ausencia; False crea conteos.",
+      "ngram_range recibe el rango elegido de GRAMS.",
+      "El vocabulario se aprende al ejecutar fit_transform sobre train, no al construir el objeto."
+    ],
+    "para_exponer": "Comparamos tres maneras de poner pesos a los términos y tres rangos de n-gramas para comprobar cómo cambia la similitud textual."
+  },
+  "6": {
+    "explicacion": [
+      "La matriz original puede tener miles de columnas. TruncatedSVD la resume en un número menor de dimensiones numéricas, conservando parte de su estructura. SVD=50 significa cincuenta dimensiones, no cincuenta temas ni cincuenta clusters. El número de grupos lo controla k.",
+      "Después aplicamos Normalizer(), que realiza normalización L2: ajusta la longitud de cada vector a uno, excepto un vector cero, que sigue siendo cero. Así la longitud del texto no domina del mismo modo que en conteos sin normalizar. No es la misma normalización que quitar stopwords: aquella transforma palabras y esta transforma vectores.",
+      "Se comparó el mismo tipo de configuración con y sin reducción y con 50/100/150 dimensiones. Cuando hay SVD, los centros viven en ese espacio reducido; para mostrar palabras hay que volver al vocabulario original mediante inverse_transform. Silhouette se calcula sobre el espacio que realmente utilizó K-Means."
+    ],
+    "ejemplo": "Puedes imaginar una noticia descrita inicialmente por miles de coordenadas de palabras. SVD la representa con 50 coordenadas resumidas. K-Means todavía busca 12 grupos dentro de ese espacio.",
+    "lectura_codigo": [
+      "if cfg[\"svd\"] decide si se añade reducción.",
+      "TruncatedSVD(n_components=...) fija cuántas dimensiones conservar.",
+      "random_state=SEED hace reproducible la parte aleatoria de SVD.",
+      "Normalizer se aplica después de SVD o directamente al espacio léxico si no hay SVD.",
+      "Pipeline ejecuta las etapas en ese orden."
+    ],
+    "para_exponer": "SVD reduce dimensiones; L2 ajusta la longitud del vector; k fija cuántos clusters buscamos. Son decisiones distintas."
+  },
+  "7": {
+    "explicacion": [
+      "K-Means busca k centros para agrupar vectores cercanos. Alterna entre asignar cada noticia al centro más cercano y recalcular los centros con las noticias asignadas. El centro es un vector promedio, no necesariamente una noticia que exista en el corpus.",
+      "n_clusters controla k. init decide cómo escoger centros iniciales: k-means++ busca una inicialización dispersa y random utiliza una alternativa aleatoria. n_init indica cuántos reinicios se prueban dentro de un ajuste. max_iter pone el límite de iteraciones de cada reinicio; no obliga a agotar ese límite si ya se alcanzó la convergencia.",
+      "Dentro de un ajuste, K-Means conserva el reinicio con menor suma de distancias cuadradas a los centros, conocida como inercia. Esa decisión interna es distinta de nuestro criterio externo de selección, silhouette en dev. Por eso aumentar n_init no garantiza un silhouette mayor. Las representaciones Count/TF-IDF, SVD y K-Means son técnicas tradicionales: la tarea de aprendizaje no usa LLMs ni modelos generativos.",
+      "La búsqueda es escalonada: primero cruza tres normalizaciones, tres representaciones, tres rangos y tres k, dando 81 candidatos. Después agrega diez ajustes alrededor de buenos candidatos: cambia SVD, prueba k=6/10 y varía parámetros individualmente. No se probaron todas las combinaciones posibles de todos los parámetros, y no se necesita afirmar eso para justificar el experimento."
+    ],
+    "ejemplo": "La configuración elegida usa k=12, n_init=10 y max_iter=300. El candidato ganador de selección convergió en 15 iteraciones: poner 300 no significa que se ejecutaron 300.",
+    "lectura_codigo": [
+      "kmeans() construye el estimador a partir de cfg.",
+      "itertools.product enumera las 81 combinaciones iniciales.",
+      "trial ejecuta un candidato y lo registra.",
+      "Las siguientes llamadas cambian dimensiones, k o un hiperparámetro.",
+      "SEED=0 se conserva en los candidatos principales; las otras semillas se estudian después como estabilidad."
+    ],
+    "para_exponer": "Utilizamos solo K-Means y variamos sus parámetros. No fijamos k igual a las diez categorías del RSS; k=12 ganó entre los candidatos probados."
+  },
+  "8": {
+    "explicacion": [
+      "Probar configuraciones no basta: hay que declarar cómo se elige una. Primero filtramos particiones problemáticas en dev: deben aparecer los k grupos, ninguno puede tener menos del 1% de dev y ninguno más del 65%. Estos límites son decisiones del estudio, no umbrales impuestos literalmente por el profesor.",
+      "Entre los candidatos que pasan esos controles se elige el mayor silhouette sin redondear. Si empatan, max conserva el primer candidato encontrado. El registro selected identifica únicamente al ganador; los otros candidatos siguen en la tabla para demostrar lo que ocurrió.",
+      "La selección no consulta ARI/NMI contra las categorías ni el silhouette de test. Tampoco fuerza el modelo anterior de k=10. La lectura temática posterior sirve para explicar ventajas y limitaciones; no convierte por sí sola al mejor silhouette en el mejor resultado imaginable. Aquí se eligió el mejor bajo el criterio declarado dentro de una búsqueda acotada."
+    ],
+    "ejemplo": "KM083 ganó con silhouette dev 0.1658002776. Cambiar max_iter a 100 o 500 produjo el mismo valor en esos candidatos; se conservó KM083 por el desempate con el primer ID.",
+    "lectura_codigo": [
+      "eligible evalúa ocupación, tamaño mínimo, tamaño máximo y existencia de silhouette.",
+      "best() reúne únicamente las filas elegibles.",
+      "Si no existe candidato elegible, se detiene antes de evaluar test.",
+      "max(... key=silhouette) compara los valores completos, no los redondeados del informe.",
+      "seleccion_dev.json congela la configuración escogida."
+    ],
+    "para_exponer": "El ganador se decide con dev y un criterio explícito de separación y tamaños; test no participa en esa decisión."
+  },
+  "9": {
+    "explicacion": [
+      "Silhouette compara la cercanía de una noticia con su propio grupo frente a su cercanía con otros grupos. Cerca de 1 suele indicar una asignación bien separada; cerca de 0 sugiere fronteras superpuestas; valores negativos pueden indicar que otros grupos quedan más cerca. No es una tasa de aciertos.",
+      "En este proyecto se calcula con distancia euclidiana. Cuando el candidato usa SVD, primero se proyecta y se normaliza L2; sin SVD se utiliza el espacio léxico normalizado. Por eso al informar un silhouette hay que decir en qué espacio y con qué distancia se obtuvo.",
+      "La función también cuenta cuántas noticias aparecen en cada grupo y detecta casos donde silhouette no está definido, como tener un solo grupo ocupado. Un valor positivo no certifica que un humano reconozca un tema. El boilerplate de una fuente puede producir un grupo compacto sin coherencia temática."
+    ],
+    "ejemplo": "Test final dio 0.177708 aproximadamente. No se lee como \"17.77% de precisión\". Se interpreta como separación positiva pero modesta en el espacio evaluado.",
+    "lectura_codigo": [
+      "np.bincount calcula el tamaño de cada cluster.",
+      "np.count_nonzero indica cuántos grupos quedaron ocupados.",
+      "La condición 1 < n_labels < len(labels) comprueba si silhouette puede calcularse.",
+      "silhouette_score(... metric=\"euclidean\") obtiene la métrica.",
+      "El diccionario resultante guarda tamaños y proporciones para la selección y el análisis."
+    ],
+    "para_exponer": "Usamos silhouette como medida geométrica de separación y la acompañamos con lectura de noticias, porque no equivale a calidad semántica garantizada."
+  },
+  "10": {
+    "explicacion": [
+      "K-Means puede llegar a particiones distintas según los centros iniciales. Estabilidad significa revisar si el patrón se conserva cuando se cambia esa inicialización. Aquí mantenemos las características y los parámetros seleccionados y repetimos K-Means con semillas 0, 1 y 2.",
+      "Comparamos las asignaciones de los mismos documentos dev mediante ARI entre pares de ejecuciones. Si los números de cluster se permutan, ARI puede seguir indicando coincidencia: compara la partición, no exige que un grupo conserve su nombre numérico. En esta revisión las categorías reales no intervienen.",
+      "Este análisis no busca una nueva semilla ganadora. Aunque la semilla 1 tenga un silhouette algo mayor, conservamos la semilla 0 definida para el modelo principal. Los tres ajustes de estabilidad están aparte de los 91 candidatos y se reúnen en la bitácora de 94 ajustes con candidate_for_selection=False."
+    ],
+    "ejemplo": "Los ARI entre semillas fueron aproximadamente 0.7625, 0.6870 y 0.6760. Hay coincidencia considerable, pero las particiones no son idénticas. Silhouettes parecidos tampoco implican las mismas asignaciones.",
+    "lectura_codigo": [
+      "assignments guarda un vector de clusters por semilla.",
+      "El bucle ajusta K-Means tres veces con el mismo Xtr.",
+      "predict genera las asignaciones sobre el mismo Xdv.",
+      "combinations enumera los pares 0–1, 0–2 y 1–2.",
+      "adjusted_rand_score compara las dos particiones, no las etiquetas RSS."
+    ],
+    "para_exponer": "Revisamos sensibilidad a la inicialización con tres semillas y ARI entre particiones; mantenemos la semilla principal sin volver a seleccionar usando ese análisis."
+  },
+  "11": {
+    "explicacion": [
+      "Después de decidir la configuración, podemos aprovechar los documentos de train y dev juntos para ajustar el modelo que se entregará. Esto se llama reajuste final o refit. Ya no estamos comparando candidatos: los parámetros están fijados y test sigue reservado.",
+      "Se construye un Pipeline completo que incluye normalización del texto, vectorizador, SVD si corresponde, L2 y K-Means. final.fit(train_dev.text) reajusta los componentes que aprenden. En particular no se reutiliza sin cambios un vocabulario que solo vio train: se aprende el vocabulario final con las 3948 noticias permitidas.",
+      "El modelo se serializa con joblib para usarlo después sin entrenar otra vez. Reajustar puede cambiar los centros, el vocabulario, los tamaños y los números de los grupos. Por eso las métricas dev del modelo final no son las métricas independientes con las que se eligió KM083: esas noticias ya entraron al ajuste final."
+    ],
+    "ejemplo": "En selección, dev obtuvo 0.165800. En el modelo final reajustado, dev dio 0.154702. No es una contradicción: son objetos ajustados con conjuntos distintos, y el segundo dev ya no es independiente.",
+    "lectura_codigo": [
+      "isin([\"train\",\"dev\"]) reúne las dos particiones permitidas.",
+      "Pipeline incorpora el normalizador y las etapas numéricas.",
+      "final.fit aprende con train_dev.text, sin textos test.",
+      "joblib.dump guarda el objeto entrenado.",
+      "configuracion_final.json documenta qué se eligió y qué particiones se usaron para ajustar."
+    ],
+    "para_exponer": "Primero seleccionamos con dev; después reajustamos el pipeline completo con train+dev y guardamos ese modelo para la evaluación y el uso final."
+  },
+  "12": {
+    "explicacion": [
+      "Predecir aquí significa asignar una noticia a uno de los centros aprendidos, no predecir una categoría supervisada. Durante esta fase no se crean nuevos centros a partir de test. Se transforman sus textos usando el vocabulario y SVD ya ajustados y se elige el centro más cercano.",
+      "El script transforma todo el corpus con el modelo final y conserva el orden de los documentos para exportar los resultados. La máscara split permite separar train, dev y test al calcular sus métricas. El archivo de asignaciones contiene ID, partición, cluster y configuración, lo que permite rastrear una noticia sin guardar las categorías como parte de la entrada del modelo.",
+      "La auditoría comprueba de nuevo la misma evaluación almacenada: verifica que el modelo cargado reproduce los clusters y que el silhouette coincide. Eso no añade una nueva configuración ni justifica retocar el modelo al mirar test. Es una comprobación de consistencia, no una nueva búsqueda."
+    ],
+    "ejemplo": "En resultados/clustering_results.tsv puedes buscar document_id=N2256 y ver cluster_id=2. La columna split te dice a qué partición pertenece y method/configuration identifica el modelo que hizo la asignación.",
+    "lectura_codigo": [
+      "final[\"normalizacion\"].transform prepara el texto con la configuración ganadora.",
+      "El vectorizador aplica el vocabulario aprendido, sin fit.",
+      "SVD y L2 también usan sus objetos ya ajustados.",
+      "final[\"kmeans\"].predict asigna un cluster por fila.",
+      "results conserva ID y split antes de añadir cluster_id y guardar el TSV."
+    ],
+    "para_exponer": "Asignamos test mediante predict del modelo ya ajustado; no usamos test para mover centros ni para decidir la configuración."
+  },
+  "13": {
+    "explicacion": [
+      "El tamaño de un grupo es el número de noticias que contiene. No basta con decir que existen doce grupos: debemos comprobar si uno absorbe casi todo, si otros quedan vacíos o si aparecen agrupamientos demasiado pequeños para interpretarlos.",
+      "cluster_sizes.tsv separa tamaños de train, dev y test y añade total. Los tamaños finales no son los mismos que los tamaños dev de un candidato durante la selección, porque el modelo final se reajustó con train+dev. La suma de todos los totales debe ser 4645 y la suma por columna debe coincidir con cada partición.",
+      "La gráfica apila train, dev y test para comparar los grupos de un vistazo. Un grupo grande no es automáticamente incorrecto: puede reflejar una cobertura frecuente; sin embargo, hay que leerlo para saber si es un tema o una bolsa de noticias genéricas. El mayor grupo final se describe honestamente como mixto."
+    ],
+    "ejemplo": "El cluster 0 reúne 680 train, 131 dev y 140 test: total 951. El menor total final es el cluster 8 con 183. Ninguno quedó vacío.",
+    "lectura_codigo": [
+      "pd.crosstab cruza cluster_id con split y cuenta filas.",
+      "reindex garantiza que aparezcan todos los IDs de grupo esperados.",
+      "sum(axis=1) suma train, dev y test para cada grupo.",
+      "to_csv guarda la tabla que lee el informe.",
+      "La auditoría compara las sumas con las asignaciones para detectar pérdidas o duplicaciones."
+    ],
+    "para_exponer": "Mostramos tamaños por partición y total; así revisamos balance y evitamos presentar solo train como si fuera todo el corpus."
+  },
+  "14": {
+    "explicacion": [
+      "Las palabras representativas ayudan a entender qué coordenadas pesan más en un centroide. Si usamos SVD, los centros están en dimensiones reducidas que no tienen nombres de palabras. Por eso primero reconstruimos sus pesos en las columnas del vocabulario original.",
+      "inverse_transform realiza esa reconstrucción aproximada. Después get_feature_names_out obtiene los términos reales de las columnas y argsort ordena sus pesos. Se toman los diez de mayor valor para cada cluster. Es importante no mostrar el nombre de una componente latente como si fuera una palabra.",
+      "Como el vocabulario usa unigramas y bigramas, puede aparecer jensen y también jensen huang. Son diez términos o características, no necesariamente diez conceptos independientes. Tampoco son probabilidades de un modelo LDA. Su lectura debe complementarse con los documentos, porque un término frecuente puede venir del formato de la fuente."
+    ],
+    "ejemplo": "El cluster 1 incluye ai, nvidia, company, huang, jensen y jensen huang, lo que sugiere IA y negocios tecnológicos. Otro grupo incluye doi y published online: eso puede indicar formato bibliográfico, no un tema científico único.",
+    "lectura_codigo": [
+      "svd.inverse_transform devuelve los centroides al espacio de palabras.",
+      "get_feature_names_out da el nombre de cada columna.",
+      "argsort()[::-1] ordena de mayor a menor peso.",
+      "[:10] selecciona diez índices.",
+      "top_rows asocia cada término con cluster_id y rank antes de exportar."
+    ],
+    "para_exponer": "Extraemos diez términos por centroide en el espacio léxico original, reconstruyéndolo desde SVD cuando corresponde, y los interpretamos con noticias reales."
+  },
+  "15": {
+    "explicacion": [
+      "Una noticia representativa se elige por una regla reproducible: debe pertenecer al grupo y estar cerca de su centro. No se escoge a mano una noticia bonita para hacer parecer coherente un cluster mezclado. Aquí se seleccionan las dos distancias menores dentro de cada grupo entre las noticias de train+dev.",
+      "También se exporta una noticia de frontera: la más lejana al centro entre los documentos de ese grupo. Sirve para discutir ruido, mezcla o límites del tema. Frontera no quiere decir error supervisado; no tenemos una respuesta de categoría que el modelo debiera acertar.",
+      "El archivo guarda el texto completo y la URL, además del ID, distancia y split. El PDF puede mostrar extractos para no hacerse enorme. Una distancia menor solo tiene sentido comparada dentro del mismo espacio y modelo; no indica mayor importancia periodística ni que esa noticia sea la mejor explicación humana del tema."
+    ],
+    "ejemplo": "Para el cluster 1 se exportaron N0648 (caída de acciones tecnológicas) y N2645 (filial de NPCI para IA/blockchain). N2517, sobre una salida a bolsa, aparece como caso de frontera del grupo.",
+    "lectura_codigo": [
+      "ids filtra documentos asignados al cluster y excluye test.",
+      "distances se calcula entre vectores y centros.",
+      "argsort(... )[:2] identifica las dos noticias más cercanas.",
+      "[-1:] conserva la más lejana como frontera.",
+      "rep_rows añade texto, URL e ID para poder comprobar qué se está mostrando."
+    ],
+    "para_exponer": "Damos dos documentos más cercanos al centro por grupo y un caso lejano para explicar qué representa el cluster y dónde se vuelve menos coherente."
+  },
+  "16": {
+    "explicacion": [
+      "El algoritmo devuelve grupos numéricos, no títulos temáticos. La interpretación es la lectura posterior de palabras, noticias cercanas, casos de frontera y tamaños. El archivo interpretacion_manual.json conserva esa lectura del equipo y el generador la incorpora al informe sin alterar asignaciones.",
+      "Hay grupos temáticos relativamente claros, como tecnología/IA, política estadounidense, deportes o hallazgos científicos. Otros se explican mejor por términos genéricos, fechas o estilo editorial. Reconocer eso no invalida haber ejecutado K-Means: es parte del análisis que pide el profesor.",
+      "Se inspeccionan también configuraciones rechazadas para comprender por qué no se eligieron. KM031 tuvo un grupo de 467 documentos dev y KM082 uno de cuatro. El modelo final no tiene grupos diminutos, pero el requisito de revisar problemas pequeños y grandes se cubre con estos ejemplos reales y la distribución final."
+    ],
+    "ejemplo": "El cluster 3 final mezcla un estudio sobre un reloj para detectar hipertensión y otro sobre neutralidad de carbono en China. Comparten Nature y DOI, no el mismo tema. Por eso se describe como sesgo de fuente, no como \"medicina\".",
+    "lectura_codigo": [
+      "notes carga la interpretación escrita del equipo.",
+      "El bucle recorre cada cluster que aparece en la tabla de tamaños.",
+      "Se añade el título propuesto, el análisis y los diez términos.",
+      "Las noticias se extraen del TSV de representantes, no se inventan.",
+      "El generador presenta todo en Markdown y PDF para estudiar y exponer."
+    ],
+    "para_exponer": "Los nombres de temas son interpretaciones justificadas con documentos; también explicamos grupos genéricos y sesgos de fuente en lugar de ocultarlos."
+  },
+  "17": {
+    "explicacion": [
+      "El objetivo incluye revisar si noticias sobre un mismo evento quedan juntas. Compartir una categoría amplia no basta: dos noticias deportivas pueden tratar partidos distintos. Para examinar eventos elegimos pares concretos de IDs y leemos qué ocurrió en ambos textos.",
+      "El generador cruza esos pares con clustering_results.tsv para obtener sus grupos reales. La columna same_cluster permite ver si quedaron juntos. Los ejemplos se toman de train/dev para hacer la lectura cualitativa sin abrir una nueva elección de parámetros a partir de test.",
+      "Hay éxitos y fallos. Un mismo evento puede separarse por diferencias de vocabulario, longitud o fórmulas editoriales. Estos ejemplos no son una evaluación exhaustiva de recuperación de eventos ni una métrica de exactitud anotada por humanos: son evidencia cualitativa rastreable que responde a la pregunta del profesor."
+    ],
+    "ejemplo": "N2256 de NPR y N2295 de CBS describen los artículos de impeachment contra Hegseth y quedan en cluster 2. N2250, la cobertura en video del mismo asunto, queda en cluster 5. El formato puede interferir con el agrupamiento del evento.",
+    "lectura_codigo": [
+      "notes[\"event_cases\"] contiene los pares analizados.",
+      "assigned indexa las asignaciones por document_id.",
+      "loc[a] y loc[b] recuperan el grupo de cada noticia.",
+      "ca == cb informa si el par cayó en el mismo grupo.",
+      "El TSV exporta IDs, grupos y explicación para verificar la conclusión."
+    ],
+    "para_exponer": "Comprobamos eventos concretos: mostramos casos que sí se reunieron y coberturas del mismo hecho que se separaron, con sus IDs y grupos reales."
+  },
+  "18": {
+    "explicacion": [
+      "Una vez formado el modelo podemos comparar los clusters con las categorías del RSS como referencia externa. ARI analiza acuerdo entre particiones ajustando por azar; NMI mide información compartida entre ambas. No requieren que los números de cluster sean iguales a nombres o números de categoría.",
+      "Estas categorías pueden ser imperfectas o demasiado amplias para los eventos. Un grupo de IA y negocios puede mezclar economía y tecnología, aunque resulte razonable por similitud textual. Por eso un ARI modesto no es automáticamente un error de implementación, pero sí debe explicarse.",
+      "La tabla de contingencia cuenta cuántas noticias de cada categoría hay en cada cluster. Sirve para ver grupos mixtos y concentraciones. Es distinta de una matriz de confusión supervisada: los clusters no son predicciones directas de las diez clases y no hay que calcular accuracy haciendo coincidir IDs numéricos arbitrarios."
+    ],
+    "ejemplo": "En test se obtuvo ARI externo cercano a 0.09985 y NMI cercano a 0.23064. Esos valores describen relación con las categorías; no fueron el criterio para escoger KM083.",
+    "lectura_codigo": [
+      "Las máscaras split separan la evidencia por partición.",
+      "adjusted_rand_score compara category con cluster_id.",
+      "normalized_mutual_info_score realiza la otra comparación externa.",
+      "pd.crosstab cuenta categorías dentro de cada cluster.",
+      "best() no lee estas métricas ni las tablas de contingencia."
+    ],
+    "para_exponer": "ARI, NMI y contingencia son análisis externo posterior. No entrenamos para imitar las categorías y no elegimos la configuración con esas etiquetas."
+  },
+  "19": {
+    "explicacion": [
+      "Una bitácora es la tabla de lo que realmente se ejecutó: identifica configuración, resultado y selección. experiments.tsv contiene los 91 candidatos, incluso los que dieron peor resultado o se rechazaron por tamaño. Si solo guardáramos el ganador no podríamos justificar la comparación.",
+      "experiments_completo.tsv añade los tres ajustes de estabilidad: total 94 filas. candidate_for_selection diferencia los candidatos de las repeticiones con otras semillas. El reajuste final se documenta por separado en configuracion_final.json y en el modelo; no se confunde con un candidato dev independiente.",
+      "Para explicar efectos de una decisión se comparan pares que solo cambian un factor. comparaciones_controladas.tsv contiene esas parejas dentro del factorial. Comparar una configuración con stopwords+TF-IDF+12 grupos frente a otra mínima+conteos+4 grupos no permite atribuir toda diferencia a stopwords. Las medias por factor son descriptivas, no pruebas de causalidad."
+    ],
+    "ejemplo": "KM033 y KM083 comparten la configuración base pertinente y cambian SVD 100 a 50: el silhouette dev pasa de 0.1117 a 0.1658. En cambio aumentar max_iter a 500 no mejoró el valor del candidato base.",
+    "lectura_codigo": [
+      "row registra parámetros, métrica, tamaños y controles para cada ejecución.",
+      "to_csv actualiza la bitácora durante el proceso.",
+      "groupby(others) reúne candidatos iguales en los factores que deben mantenerse.",
+      "Los pares comparan dos valores de un factor dentro de ese grupo.",
+      "consolidate_log añade las semillas como estabilidad, no como nuevas candidatas."
+    ],
+    "para_exponer": "Guardamos todas las pruebas y utilizamos comparaciones controladas para explicar qué cambió, qué empeoró y qué no produjo diferencia."
+  },
+  "20": {
+    "explicacion": [
+      "La interfaz es un script de consola para consultar el trabajo sin reentrenarlo. Sin argumentos muestra configuración elegida, métricas finales y tamaños. --cluster seguido de un número muestra sus diez términos, las dos noticias y el caso de frontera.",
+      "--texto recibe un título+descripción en inglés y lo asigna con el modelo persistido. Utiliza la misma normalización y vocabulario final; no añade la noticia al corpus ni actualiza los centros. Que devuelva un cluster no garantiza que la noticia sea pertinente: vocabulario desconocido o texto demasiado corto pueden dificultar la interpretación.",
+      "Este archivo es el punto más sencillo para una demostración en clase. No necesitas ejecutar experimentos.py para enseñar una tabla; eso iniciaría un proceso de entrenamiento que además está protegido contra sobrescritura. La consulta normal solo carga TSV o el modelo, según la opción utilizada."
+    ],
+    "ejemplo": "Comando desde la raíz: .venv/bin/python fase_2_aprendizaje/no_supervisada/inspeccionar.py --cluster 2. Debe mostrar términos relacionados con Trump, elecciones y administración estadounidense, junto con las noticias exportadas.",
+    "lectura_codigo": [
+      "argparse define las opciones de la terminal.",
+      "Si existe --texto, joblib.load carga el modelo y predict devuelve el grupo.",
+      "Si existe --cluster, se filtran los TSV por cluster_id.",
+      "Si no se pasa ninguna opción, se imprime el resumen.",
+      "Un cluster inexistente produce un mensaje de error de uso."
+    ],
+    "para_exponer": "La consulta permite mostrar resultados existentes y asignar un texto nuevo sin volver a entrenar, con las mismas transformaciones del modelo final."
+  },
+  "21": {
+    "explicacion": [
+      "Reproducibilidad significa poder saber qué datos, versiones y decisiones produjeron los resultados. requirements-lock.txt guarda versiones de las dependencias. configuracion_final.json registra el conjunto usado para reajustar, la configuración ganadora, la semilla y las versiones. parametros_pipeline_final.json amplía los parámetros completos, incluidos valores por defecto.",
+      "Los archivos NPZ son matrices dispersas: guardan eficientemente muchos ceros sin convertirse en una tabla enorme de texto. Para interpretarlas necesitas el orden de documentos y el vocabulario. La fila i de cada NPZ corresponde a la fila i del TSV después de filtrar por esa partición; la columna j corresponde al término j del vocabulario.",
+      "El modelo joblib guarda los objetos ajustados, no solo los nombres de los parámetros. manifest.json contiene tamaños y huellas SHA-256 para comprobar integridad. Es distinto de un resultado científico: una huella permite detectar un cambio de bytes, pero no demuestra por sí sola que el método sea adecuado."
+    ],
+    "ejemplo": "Si se cambia el orden de las noticias al leer una matriz sin actualizar sus IDs, podrías atribuir el vector de N2256 a otra noticia. Por eso la auditoría compara todas las matrices y su orden, no solo su número de filas.",
+    "lectura_codigo": [
+      "joblib.dump conserva los componentes entrenados del pipeline.",
+      "save_npz almacena las matrices léxicas por split.",
+      "get_feature_names_out exporta el vocabulario en orden.",
+      "SHA-256 vincula los datos usados con la configuración registrada.",
+      "El ZIP incluye los binarios aunque Git los ignore."
+    ],
+    "para_exponer": "Entregamos datos, código, entorno, configuración, vocabulario, matrices y modelo; así se puede rastrear y reproducir el proceso, no solamente ver un número final."
+  },
+  "22": {
+    "explicacion": [
+      "El informe analítico y la guía de estudio tienen propósitos distintos. El informe explica el método, los resultados obtenidos y sus limitaciones. Esta guía enseña cómo funciona cada paso y cómo encontrarlo en el código. Ambos se generan a partir de los archivos reales y reconocen el trabajo de todo el equipo.",
+      "El informe incluye gráficas de tamaños y experimentos, comparación de configuraciones, interpretación de los doce grupos y ejemplos de eventos. La lectura temática está escrita en interpretacion_manual.json, mientras que métricas, términos y noticias provienen de TSV. El generador junta esas fuentes y crea Markdown y PDF.",
+      "Generar un PDF no equivale a volver a ejecutar el aprendizaje. generar_informe.py lee resultados existentes y dibuja; no cambia los clusters ni reajusta K-Means. Si se modifican los modelos en otra corrida, la interpretación temática debe revisarse antes de reutilizarla, porque el mismo número de cluster puede significar otra cosa."
+    ],
+    "ejemplo": "La gráfica de tamaños se construye con cluster_sizes.tsv. El párrafo que llama al cluster 3 un sesgo de publicaciones científicas sale de interpretacion_manual.json y se acompaña con las noticias reales guardadas.",
+    "lectura_codigo": [
+      "El generador lee tablas, configuración e interpretación.",
+      "matplotlib produce las figuras PNG.",
+      "Cada apartado se añade a una lista de texto.",
+      "El archivo Markdown conserva la versión editable.",
+      "ReportLab construye el PDF, con autoría conjunta del equipo."
+    ],
+    "para_exponer": "El informe presenta resultados y limitaciones; la guía sirve para estudiarlos. Los dos reconocen la elaboración conjunta de todos los integrantes."
+  },
+  "23": {
+    "explicacion": [
+      "Validar resultados es comprobar que los archivos de la entrega concuerden entre sí. validar_resultados.py verifica IDs, tamaños, cantidad de términos y representantes, selección y carga del modelo. auditar_cumplimiento.py hace una revisión más profunda: reconstruye los splits, revisa las matrices completas y recalcula métricas de las mismas asignaciones.",
+      "La auditoría también reconstruye un vectorizador sobre train+dev para verificar el vocabulario final y calcula qué noticias son realmente las más cercanas a cada centro. Esto ayuda a detectar errores silenciosos, por ejemplo exportar representantes de otro grupo o columnas desalineadas. No entrena de nuevo K-Means ni decide una nueva configuración con test.",
+      "El programa principal se detiene si ya existe configuracion_final.json. Esa protección evita que, por intentar consultar resultados, sobrescribas el modelo final y repitas inadvertidamente el estudio. Las comprobaciones aprobadas respaldan consistencia técnica, no prometen que todos los temas sean puros: el análisis de calidad sigue siendo necesario."
+    ],
+    "ejemplo": "Si alguien cambiara manualmente cluster_id de una noticia en clustering_results.tsv, el modelo recargado podría producir otro grupo y la auditoría fallaría. Si borrara una noticia, dejarían de coincidir IDs y sumas.",
+    "lectura_codigo": [
+      "assert y check detienen la auditoría cuando una condición no se cumple.",
+      "np.array_equal exige que coincidan todas las asignaciones comprobadas.",
+      "np.isclose compara métricas permitiendo únicamente tolerancia numérica pequeña.",
+      "Se escriben los controles aprobados en auditoria_cumplimiento.json.",
+      "La guardia de configuracion_final.json impide una sobrescritura automática."
+    ],
+    "para_exponer": "Las 39 comprobaciones aprobadas verifican integridad y reproducibilidad de lo entregado; la evaluación temática y sus límites se presentan por separado."
+  }
+}

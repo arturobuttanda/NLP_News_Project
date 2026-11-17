@@ -1,0 +1,34 @@
+{
+  "selected_experiment": "KM083",
+  "config": {
+    "normalization": "sin_stopwords",
+    "representation": "binaria",
+    "ngram": [
+      1,
+      2
+    ],
+    "svd": 50,
+    "k": 12,
+    "n_init": 10,
+    "init": "k-means++",
+    "max_iter": 300
+  },
+  "train_dev_count": 3948,
+  "test_used_for_selection": false,
+  "vectorizer_refitted_on": "train+dev",
+  "source_sha256": "23a6a170f9a908c411e8a9988e6da1615a22338ab49ebef6c97762bf94dd455a",
+  "python": "3.13.5",
+  "versions": {
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "spacy": "3.8.18",
+    "en-core-web-sm": "3.8.0",
+    "joblib": "1.6.0",
+    "reportlab": "5.1.0",
+    "matplotlib": "3.11.2",
+    "threadpoolctl": "3.8.0"
+  },
+  "seed": 0
+}

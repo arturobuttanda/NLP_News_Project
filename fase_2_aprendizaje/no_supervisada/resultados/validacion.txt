@@ -1,0 +1,1 @@
+OK: 91 experimentos; 4645 asignaciones; 12 grupos; 10 términos y 2 noticias por grupo; selección en dev, persistencia y métricas externas verificadas.

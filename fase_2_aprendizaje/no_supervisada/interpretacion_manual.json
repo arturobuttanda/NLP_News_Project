@@ -1,0 +1,96 @@
+{
+  "stability_comment": "El ARI entre semillas está entre 0.6760 y 0.7625: hay coincidencia considerable, pero las particiones no son idénticas. El silhouette varía poco (0.1643–0.1676), lo que no implica que cada noticia conserve su grupo. Se conserva la semilla 0 predefinida; no se elige la semilla con mejor puntuación.",
+  "dev_comparison": "La inspección de dev muestra que eliminar stopwords permite temas más reconocibles que la línea mínima, pero no elimina expresiones como continue reading, year old o las citas DOI. Con k=4 (KM031), un grupo absorbe 467/697 noticias (67.0%) y se rechaza por tamaño. La configuración sin SVD (KM082) deja un grupo de cuatro noticias y silhouette 0.0181: es un caso pequeño problemático. Con SVD=50 (KM083) los tamaños dev van de 27 a 155 y mejoran respecto a SVD=100 (KM033, silhouette 0.1117), aunque persisten grupos definidos por estilo o términos temporales. El resultado es útil como exploración, pero no descubre doce temas puros. En torno al ganador, n_init=1 baja el silhouette a 0.1525 y n_init=20 da 0.1641: más reinicios no garantizan mejorar esta métrica. Inicialización random da 0.1640. Cambiar max_iter a 100 o 500 no altera el resultado (0.1658), pues el ajuste base converge en 15 iteraciones.",
+  "dev_examples": [
+    {
+      "experiment_id": "KM001",
+      "cluster_id": 0,
+      "comment": "Los términos the, to, of, in dominan. Las noticias representativas (N0344 | N1656) tratan la inflación en India y una protesta contra el alcalde de Kyiv: se unen por vocabulario genérico, no por el mismo evento. Se conservaron los textos completos para verificarlo."
+    },
+    {
+      "experiment_id": "KM083",
+      "cluster_id": 3,
+      "comment": "N0956 (un diente de capibara de millones de años) y N0606 (un detenido de 28 años) se unen por year old; la similitud lingüística no equivale a compartir tema ni evento."
+    },
+    {
+      "experiment_id": "KM083",
+      "cluster_id": 8,
+      "comment": "N4209 y N0132 comparten el contexto de la política estadounidense y las elecciones intermedias. Se obtiene un tema reconocible, aunque son sucesos distintos."
+    }
+  ],
+  "clusters": {
+    "0": {
+      "title": "Actualidad general y asuntos públicos: grupo mixto",
+      "analysis": "Es el mayor grupo: 951 noticias, 20.5% del corpus. N2022 trata apoyo público al cuidado infantil en Reino Unido y N2623 una controversia por etanol en combustible en India. Comparten vocabulario institucional, pero no un tema específico. Los términos climate y global no bastan para llamarlo exclusivamente ambiental. N3572, sobre la costa de Luisiana, confirma la amplitud del grupo. Su tamaño debe leerse como una bolsa residual de actualidad."
+    },
+    "1": {
+      "title": "Industria tecnológica, IA e inversión",
+      "analysis": "N0648 describe caídas de Nvidia, AMD y Dell ligadas al financiamiento de IA; N2645 habla de una filial tecnológica de NPCI centrada en IA y blockchain. Los términos Nvidia, Huang, AI y data sugieren un eje de tecnología y negocios. La noticia de frontera N2517 es una salida a bolsa de una startup: próxima por negocios, pero no necesariamente por IA. Es un tema amplio, no un único evento."
+    },
+    "2": {
+      "title": "Trump, elecciones y administración estadounidense",
+      "analysis": "Los términos Donald Trump, president, midterm y election y las noticias N0141 y N2259 apoyan una interpretación política clara. Una trata un acto electoral en Kentucky y otra cambios en el círculo de asesores tras elecciones: comparten actores y coyuntura, pero son hechos distintos. N2000, un editorial sobre Rusia y la corte penal internacional, amplía el grupo hacia política exterior y opinión."
+    },
+    "3": {
+      "title": "Formato de publicaciones científicas: sesgo de fuente",
+      "analysis": "N2879 sobre detección de hipertensión con un reloj y N2880 sobre neutralidad de carbono en China comparten Nature, Published online y DOI, pero sus temas son distintos. Los términos 2026, 10, 1038 y doi revelan un grupo de formato bibliográfico, no una especialidad científica. El caso N0515, cupones Lenovo con fecha en el título, muestra contaminación por coincidencias numéricas. No debe presentarse como un tema científico coherente."
+    },
+    "4": {
+      "title": "Novedades e investigación: mezcla léxica",
+      "analysis": "N0484 anuncia un automóvil Tesla y N0304 cambios de un programa de viajero frecuente. La palabra new y expresiones de novedad pesan más que una materia común; read e360 añade una marca de fuente. N4180, sobre nuevas conversaciones de la guerra en Ucrania, ilustra un caso de frontera claramente alejado de tecnología o transporte. Es un grupo de baja especificidad temática."
+    },
+    "5": {
+      "title": "Textos con continue reading: sesgo editorial",
+      "analysis": "Con 698 noticias es el segundo grupo más grande. N1156 describe un tejado y fauna local; N1992 es una carta de obituario. Ambos terminan en Continue reading, igual que el caso de frontera N2805, una reseña de Apple Watch. El grupo captura una fórmula editorial del feed y textos extensos, no un tema. La normalización ganadora elimina stopwords, pero no limpia boilerplate; esa diferencia explica esta limitación sin atribuir causalidad exclusiva a un solo factor."
+    },
+    "6": {
+      "title": "Deportes, ligas y temporada",
+      "analysis": "N3807 presenta el equipo de la semana de la Premier League y N3812 la carrera por el título antes de Chelsea-Manchester City. Week, league, win, football y season son términos consistentes con noticias deportivas. N3877 es un litigio ligado a figuras del deporte: conserva actores del ámbito, pero su contenido es legal. Hay coherencia amplia con fronteras difusas."
+    },
+    "7": {
+      "title": "Hallazgos científicos y salud",
+      "analysis": "N0763 trata agresividad de células cancerosas pequeñas y N0753 una fuente de células inmunitarias contra cáncer. Ambos apoyan un tema de investigación biomédica, aunque describen estudios diferentes. Scientists, researchers y discovered también pueden agrupar ciencias distintas. El caso N0615 sobre un dispositivo de grabación oculto en OpenAI es ajeno a ese tema y evidencia ruido por términos como hidden y discovered."
+    },
+    "8": {
+      "title": "Referencias al pasado y duración: grupo mixto",
+      "analysis": "Es el grupo final más pequeño: 183 noticias en total, pero no es diminuto (3.9% del corpus). N2526 trata resultados de McDonald's y N3889 a un equipo de baloncesto; ambos mencionan los últimos años. Los términos years, ago y time revelan una coincidencia temporal que no identifica un tema común. El caso de frontera N4545, sobre una sentencia judicial, confirma la heterogeneidad."
+    },
+    "9": {
+      "title": "Cultura, reseñas y relatos personales",
+      "analysis": "N4220 habla del cambio de sonido de una cantante y N4264 reseña poemarios. Film, review, life y like apoyan una tendencia cultural y narrativa. Sin embargo, N3052 explica un algoritmo de conteo: un artículo explicativo puede parecerse por estilo sin ser cultura. El nombre es una tendencia dominante cualitativa, no una etiqueta garantizada para todas las noticias."
+    },
+    "10": {
+      "title": "Años, edades y planes: grupo mixto",
+      "analysis": "N3955 anticipa candidatos a novato del año de MLB y N1129 una ampliación de beneficios laborales para 2027. El vínculo es year y referencias a años, no la categoría de contenido. N3603, sobre microplásticos y un estudio de cinco años, es un caso de frontera que confirma el sesgo temporal. Este grupo necesita una lectura crítica y no debe renombrarse como deportes o ciencia basándose en una sola noticia."
+    },
+    "11": {
+      "title": "Declaraciones y actores públicos: política con ruido",
+      "analysis": "Minister, government y prime minister sugieren asuntos públicos, y N4639 trata una oferta de remuneración al sector público. Pero N3920 contiene declaraciones de un jugador de baloncesto: says y said atraen noticias de temas distintos. N0039, sobre el debate del Brexit, sí encaja en política. Es un grupo mixto de declaraciones, no una categoría política limpia."
+    }
+  },
+  "event_cases": [
+    {
+      "document_a": "N2256",
+      "document_b": "N2295",
+      "interpretation": "Ambos textos describen la presentación por Thomas Massie de artículos de impeachment contra Pete Hegseth. NPR y CBS quedan juntos en el grupo 2: evidencia favorable de un evento compartido entre fuentes."
+    },
+    {
+      "document_a": "N2250",
+      "document_b": "N2256",
+      "interpretation": "La versión en video de The Guardian de la presentación de los artículos queda en el grupo 5, mientras NPR queda en el 2. El formato y boilerplate pueden separar coberturas de un mismo evento."
+    },
+    {
+      "document_a": "N1635",
+      "document_b": "N1637",
+      "interpretation": "Ambos textos del corpus describen la restauración de Starlink en Ucrania tras contactos de Streeting con Hegseth. Quedan en grupos 11 y 5: otro ejemplo de separación por vocabulario y estilo."
+    }
+  ],
+  "limitations": [
+    "El resultado no representa doce temas puros. Los grupos 1, 2, 6 y 7 tienen señales temáticas más claras; 0, 4, 8, 10 y 11 mezclan contenidos, y 3 y 5 muestran sesgo de formato/fuente.",
+    "El grupo final mayor tiene 951 noticias y el menor 183; todos conservan al menos 30 noticias test. No se encontró un grupo final diminuto, pero la configuración KM082 sin SVD produjo uno de cuatro documentos dev y fue rechazada; KM031 produjo uno de 467, demasiado grande según el umbral declarado.",
+    "La eliminación de stopwords no limpia automáticamente el boilerplate. Continue reading, DOI y fechas persisten. La lematización sí incluye limpieza, pero no ganó el criterio numérico en las configuraciones probadas; no se concluye que lematizar sea perjudicial en general.",
+    "El silhouette de test 0.1777 es positivo pero modesto; hay superposición y ruido. El ARI externo de test cercano a 0.100 y NMI cercano a 0.231 indican coincidencia limitada con las categorías, algo compatible con descubrir grupos por evento o estilo en vez de las etiquetas supervisadas.",
+    "El análisis de eventos muestra tanto coberturas compartidas que sí se reúnen como otras separadas. No se afirma recuperación exhaustiva de eventos ni precisión humana anotada; son ejemplos cualitativos trazables por ID.",
+    "Como trabajo futuro, se podría probar explícitamente limpieza + stopwords, eliminación de fórmulas bibliográficas, otros límites de vocabulario o una evaluación humana anotada. No se usó test para elegir estas mejoras ni se reentrenó después de examinarlo."
+  ]
+}
