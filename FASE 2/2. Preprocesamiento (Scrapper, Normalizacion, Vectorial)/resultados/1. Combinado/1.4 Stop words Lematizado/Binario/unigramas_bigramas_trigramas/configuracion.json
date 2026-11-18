@@ -1,0 +1,34 @@
+{
+  "origen_ngramas": "C:\\Users\\links\\Desktop\\Materias\\Leng. Natural\\Proyecto PLN\\FASE 2\\2. Preprocesamiento (Scrapper, Normalizacion, Vectorial)\\resultados\\1. Combinado\\1.4 Stop words Lematizado\\N-gramas",
+  "representacion": "binaria",
+  "combinacion": "unigramas_bigramas_trigramas",
+  "ordenes": [
+    "unigramas",
+    "bigramas",
+    "trigramas"
+  ],
+  "particion_de_ajuste": "train",
+  "particiones": {
+    "train": {
+      "filas": 4645,
+      "columnas": 313290,
+      "vectores_cero": 1
+    },
+    "dev": {
+      "filas": 996,
+      "columnas": 313290,
+      "vectores_cero": 0
+    },
+    "test": {
+      "filas": 996,
+      "columnas": 313290,
+      "vectores_cero": 0
+    }
+  },
+  "versiones": {
+    "scikit-learn": "1.8.0",
+    "scipy": "1.16.3",
+    "numpy": "2.3.1",
+    "joblib": "1.5.3"
+  }
+}

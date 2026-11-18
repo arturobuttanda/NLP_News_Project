@@ -1,0 +1,75 @@
+{
+  "corpus": "C:\\Users\\links\\Desktop\\Materias\\Leng. Natural\\Proyecto PLN\\FASE 2\\Pipeline procesamiento\\news_raw_corpus.tsv",
+  "recolectar": false,
+  "dias": 14,
+  "normalizacion": "lemas",
+  "representacion": "frecuencia",
+  "ngramas": "ambos",
+  "noticias_totales": 4645,
+  "semilla": 0,
+  "particiones": {
+    "train": {
+      "filas": 3251,
+      "columnas": 127750,
+      "vectores_cero": 1
+    },
+    "dev": {
+      "filas": 697,
+      "columnas": 127750,
+      "vectores_cero": 0
+    },
+    "test": {
+      "filas": 697,
+      "columnas": 127750,
+      "vectores_cero": 0
+    }
+  },
+  "distribucion_por_categoria": {
+    "dev": {
+      "ciencia": 111,
+      "cultura_espectaculos": 75,
+      "deportes": 74,
+      "economia": 69,
+      "medio_ambiente": 60,
+      "mundo_conflictos": 62,
+      "politica": 73,
+      "salud": 56,
+      "sociedad": 56,
+      "tecnologia_ia": 61
+    },
+    "test": {
+      "ciencia": 111,
+      "cultura_espectaculos": 76,
+      "deportes": 75,
+      "economia": 69,
+      "medio_ambiente": 59,
+      "mundo_conflictos": 61,
+      "politica": 72,
+      "salud": 57,
+      "sociedad": 56,
+      "tecnologia_ia": 61
+    },
+    "train": {
+      "ciencia": 516,
+      "cultura_espectaculos": 351,
+      "deportes": 346,
+      "economia": 323,
+      "medio_ambiente": 279,
+      "mundo_conflictos": 288,
+      "politica": 337,
+      "salud": 264,
+      "sociedad": 262,
+      "tecnologia_ia": 285
+    }
+  },
+  "python": "3.13.14",
+  "versiones": {
+    "scikit-learn": "1.8.0",
+    "pandas": "2.3.1",
+    "numpy": "2.3.1",
+    "scipy": "1.16.3",
+    "joblib": "1.5.3",
+    "spacy": "3.8.16",
+    "en-core-web-sm": "3.8.0"
+  }
+}

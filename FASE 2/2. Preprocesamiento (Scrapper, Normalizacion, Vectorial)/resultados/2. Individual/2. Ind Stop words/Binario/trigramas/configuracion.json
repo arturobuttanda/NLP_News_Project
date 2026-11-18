@@ -1,0 +1,32 @@
+{
+  "origen_ngramas": "C:\\Users\\links\\Desktop\\Materias\\Leng. Natural\\Proyecto PLN\\FASE 2\\2. Preprocesamiento (Scrapper, Normalizacion, Vectorial)\\resultados\\2. Individual\\2. Ind Stop words\\N-gramas",
+  "representacion": "binaria",
+  "combinacion": "trigramas",
+  "ordenes": [
+    "trigramas"
+  ],
+  "particion_de_ajuste": "train",
+  "particiones": {
+    "train": {
+      "filas": 4645,
+      "columnas": 159505,
+      "vectores_cero": 3
+    },
+    "dev": {
+      "filas": 996,
+      "columnas": 159505,
+      "vectores_cero": 502
+    },
+    "test": {
+      "filas": 996,
+      "columnas": 159505,
+      "vectores_cero": 538
+    }
+  },
+  "versiones": {
+    "scikit-learn": "1.8.0",
+    "scipy": "1.16.3",
+    "numpy": "2.3.1",
+    "joblib": "1.5.3"
+  }
+}
