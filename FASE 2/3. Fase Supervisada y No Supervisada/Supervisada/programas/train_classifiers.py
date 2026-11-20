@@ -45,7 +45,14 @@ from sklearn.svm import LinearSVC
 TASK_DIR = Path(__file__).resolve().parents[1]
 ROOT_DIR = Path(__file__).resolve().parents[3]
 PREPROCESSING_RESULTS_DIR = ROOT_DIR / "2. Preprocesamiento (Scrapper, Normalizacion, Vectorial)" / "resultados"
-CORPUS_DIR = PREPROCESSING_RESULTS_DIR / "3 Lematizado" / "Frecuencia" / "Corpus KM01"
+# Ruta de compatibilidad para la representación lematizada vigente.
+CORPUS_DIR = (
+    PREPROCESSING_RESULTS_DIR
+    / "1. Combinado"
+    / "1.4 Stop words Lematizado"
+    / "Frecuencia"
+    / "unigramas"
+)
 # Se conservan estas constantes para aceptar también la estructura histórica.
 MATRICES_DIR = ROOT_DIR / "fase_2_aprendizaje" / "matrices"
 DATA_PROCESSED_DIR = ROOT_DIR / "data" / "processed"
@@ -75,13 +82,11 @@ CATEGORIAS_CANONICAS = {
 }
 
 NORMALIZACIONES = [
+    # Esta lista define las líneas de preprocesamiento comparables.
+    # La primera variante conserva solo la tokenización y funciona como línea base.
     ("1. Combinado/1. Ind Tokenizado", "tokenizado_minimo"),
     ("1. Combinado/1.1 Comb Stop words", "combinado_stop_words"),
-    ("1. Combinado/1.2 Comb Lematizado", "combinado_lemas"),
-    ("1. Combinado/1.3 Tokenizado Lematizado", "tokenizado_lemas"),
     ("1. Combinado/1.4 Stop words Lematizado", "stopwords_lemas"),
-    ("2. Individual/2. Ind Stop words", "solo_stop_words"),
-    ("2. Individual/3. Ind Lematizado", "solo_lematizado"),
 ]
 
 REPRESENTACIONES = [
@@ -92,11 +97,8 @@ REPRESENTACIONES = [
 
 NGRAMAS_PRIORITARIOS = [
     "unigramas",
-    "bigramas",
-    "trigramas",
     "unigramas_bigramas",
-    "unigramas_trigramas",
-    "bigramas_trigramas",
+    "bigramas",
     "unigramas_bigramas_trigramas",
 ]
 
@@ -165,6 +167,7 @@ def ajustar_pipelines_con_gridsearch(df_docs):
     print("=" * 80)
 
     # Las máscaras separan los datos sin permitir que dev participe en el ajuste.
+    # X_train_text solo alimenta el CV interno; X_dev_text se reserva para evaluación.
     train_mask = df_docs["split"] == "train"
     dev_mask = df_docs["split"] == "dev"
     X_train_text = df_docs.loc[train_mask, "text"].values
@@ -175,6 +178,8 @@ def ajustar_pipelines_con_gridsearch(df_docs):
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEMILLA)
 
     with TemporaryDirectory() as cache_dir:
+        # Cada candidato contiene el vectorizador, el clasificador y su rejilla.
+        # El pipeline garantiza que TF-IDF o SVD se ajusten dentro de cada pliegue.
         candidatos = [
             (
                 "MultinomialNB",
@@ -271,6 +276,7 @@ def ajustar_pipelines_con_gridsearch(df_docs):
 def evaluar_modelo(modelo, X_train, y_train, X_dev, y_dev):
     """Entrena un modelo y calcula sus métricas sobre la partición dev."""
     # Se mide únicamente el tiempo de ajuste del clasificador.
+    # El vocabulario/vectorización ya se ajustó antes al construir las matrices.
     t0 = time.time()
     modelo.fit(X_train, y_train)
     tiempo_entrenamiento = time.time() - t0
@@ -324,12 +330,13 @@ def ejecutar_experimentos():
     exp_counter = 1
 
     # Barrido sistemático de espacios vectoriales disponibles.
+    # El conjunto evita evaluar dos veces la misma ruta de matriz.
     matrices_visitadas = set()
-    # Se recorren las normalizaciones disponibles.
+    # Primer factor: variantes de preprocesamiento.
     for norm_dir, norm_label in NORMALIZACIONES:
-        # Se prueban las tres formas de representación vectorial.
+        # Segundo factor: binario, frecuencia y TF-IDF.
         for rep_dir, rep_label in REPRESENTACIONES:
-            # Se prueban las combinaciones de n-gramas exportadas.
+            # Tercer factor: combinaciones de unigramas, bigramas y trigramas.
             for ngram in NGRAMAS_PRIORITARIOS:
                 matriz_path = PREPROCESSING_RESULTS_DIR / norm_dir / rep_dir / ngram
                 if not matriz_path.exists() or not (matriz_path / "X_train.npz").exists():
@@ -437,11 +444,13 @@ def ejecutar_experimentos():
 
     # 4. Experimento con Reducción de Dimensionalidad (TruncatedSVD)
     print("\nEvaluando variante con reducción de dimensionalidad (TruncatedSVD)...")
+    # Se parte de la mejor matriz de LinearSVC para aislar el efecto de SVD.
     mejores_matriz = Path(mejores_por_algoritmo["LinearSVC"]["exp"]["matriz_path"])
     X_train_opt = load_npz(mejores_matriz / "X_train.npz")
     X_dev_opt = load_npz(mejores_matriz / "X_dev.npz")
 
     # Se compara el efecto de dos tamaños de proyección SVD.
+    # n=100 y n=300 permiten comparar una reducción alta y una moderada.
     for n_comp in [100, 300]:
         exp_id = f"C{exp_counter:02d}"
         exp_counter += 1
@@ -473,6 +482,7 @@ def ejecutar_experimentos():
 
     # Marcar los seleccionados
     # Solo se marcan como seleccionados los mejores de cada algoritmo.
+    # Macro-F1 decidido sobre dev es el único criterio de mejor por familia.
     for algo, info in mejores_por_algoritmo.items():
         info["exp"]["selected"] = "yes"
 

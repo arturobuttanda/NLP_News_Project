@@ -62,3 +62,33 @@ Desde la carpeta `FASE 2`:
 python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\train_kmeans.py"
 ```
 
+### Ejecución paralela optimizada
+
+Se incluye una versión paralela pensada para una GPU de 15 GB y 50 GB de RAM:
+
+```powershell
+# Detecta GPU/cuML automáticamente y vuelve a CPU si no está disponible
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\train_kmeans_parallel.py" --device auto --workers 5
+
+# Fuerza GPU RAPIDS/cuML
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\train_kmeans_parallel.py" --device gpu
+
+# Fuerza CPU con cinco valores de k simultáneos
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\train_kmeans_parallel.py" --device cpu --workers 5
+```
+
+También está disponible la notebook [`train_kmeans_parallel.ipynb`](programas/train_kmeans_parallel.ipynb). Para usar GPU se requiere un entorno RAPIDS con `cuML`, `cuPy` y CUDA compatibles; sin esas dependencias la notebook ejecuta la variante CPU paralela.
+
+## Interfaz de consulta
+
+Después de ejecutar el agrupamiento, se pueden consultar los resultados sin modificar las asignaciones ni volver a entrenar modelos:
+
+```powershell
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\inspect_results.py" experiments --limit 20
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\inspect_results.py" experiments --normalization stop_words --representation tfidf
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\inspect_results.py" selected
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\inspect_results.py" cluster
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\inspect_results.py" cluster --cluster-id 8
+python ".\3. Fase Supervisada y No Supervisada\No Supervisada\programas\inspect_results.py" assignments --cluster-id 8 --split dev --limit 20
+```
+

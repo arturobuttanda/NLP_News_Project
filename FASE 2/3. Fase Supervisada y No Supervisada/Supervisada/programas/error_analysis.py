@@ -7,7 +7,14 @@ import pandas as pd
 TASK_DIR = Path(__file__).resolve().parents[1]
 ROOT_DIR = Path(__file__).resolve().parents[3]
 PREPROCESSING_RESULTS_DIR = ROOT_DIR / "2. Preprocesamiento (Scrapper, Normalizacion, Vectorial)" / "resultados"
-CORPUS_DIR = PREPROCESSING_RESULTS_DIR / "3 Lematizado" / "Frecuencia" / "Corpus KM01"
+# Ruta de compatibilidad para la representación lematizada vigente.
+CORPUS_DIR = (
+    PREPROCESSING_RESULTS_DIR
+    / "1. Combinado"
+    / "1.4 Stop words Lematizado"
+    / "Frecuencia"
+    / "unigramas"
+)
 DATA_PROCESSED_DIR = ROOT_DIR / "data" / "processed"
 RESULTADOS_DIR = TASK_DIR / "resultados"
 METRICAS_DIR = RESULTADOS_DIR / "02_metricas_y_predicciones"
@@ -19,7 +26,13 @@ def analizar_errores():
     preds_path = METRICAS_DIR / "classification_predictions.tsv"
     metrics_path = METRICAS_DIR / "classification_metrics.tsv"
     # Se consulta la misma tabla etiquetada usada para construir las matrices.
-    docs_path = CORPUS_DIR / "labeled_documents.tsv"
+    docs_path = (
+        PREPROCESSING_RESULTS_DIR
+        / "1. Combinado"
+        / "1. Ind Tokenizado"
+        / "N-gramas"
+        / "labeled_documents.tsv"
+    )
     if not docs_path.exists():
         docs_path = DATA_PROCESSED_DIR / "labeled_documents.tsv"
 

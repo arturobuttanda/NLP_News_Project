@@ -1,0 +1,2 @@
+baseline_role	baseline_experiment_id	baseline_method	baseline_representation	baseline_k	baseline_silhouette	baseline_ari	baseline_nmi	champion_experiment_id	champion_method	champion_representation	champion_k	champion_silhouette	champion_ari	champion_nmi	silhouette_delta
+only_tokenization	U28	KMeans+SVD(100)	binary trigramas	8	0.8718	-0.0039	0.0576	U966	KMeans+SVD(100)	frecuencia bigramas_trigramas	4	0.9396	0.0001	0.0023	0.0678

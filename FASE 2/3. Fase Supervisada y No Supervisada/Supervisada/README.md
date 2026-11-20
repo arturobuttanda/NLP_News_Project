@@ -1,6 +1,6 @@
 ﻿# Módulo de Clasificación Supervisada de Noticias (Etapa II - Tarea A)
 
-> Esta carpeta usa como entrada la salida de `2. Preprocesamiento (Scrapper, Normalizacion, Vectorial)/resultados/3 Lematizado/Frecuencia/Corpus KM01/`.
+> Esta carpeta usa como entrada las salidas vigentes de `2. Preprocesamiento (Scrapper, Normalizacion, Vectorial)/resultados/1. Combinado/` y `2. Individual/`.
 > Los resultados de clasificación se guardan exclusivamente en `resultados/`.
 
 ## Organización de resultados
@@ -78,11 +78,11 @@ A continuación se detalla cada función que interviene en la clasificación sup
 * **Requisito del PDF:** *Sección 6 — "Document the annotation/label mapping procedure, class distribution, and treatment of missing or ambiguous labels."*
 * **Firma:** `def cargar_y_auditar_etiquetas() -> pd.DataFrame`
 * **Entradas:** Carga [`data/processed/labeled_documents.tsv`](file:///c:/Users/Arthy/NLP/nlp2.0/Proyecto%20PLN/data/processed/labeled_documents.tsv).
-* **Salida:** DataFrame verificado y filtrado de 4,645 documentos.
+* **Salida:** DataFrame verificado y filtrado de 6,637 documentos.
 * **Lógica Interna y Funcionamiento Detallado:**
   1. **Auditoría de integridad:** Aplica máscaras booleanas para detectar textos vacíos (`df["text"].str.strip().eq("")`), categorías vacías, identificadores duplicados y etiquetas que no pertenezcan al conjunto canónico de 10 clases (`CATEGORIAS_CANONICAS`).
   2. **Tratamiento de ambigüedades:** La asignación de etiquetas es *distante* (derivada del feed RSS temático de origen). Si un artículo fue sindicado en múltiples secciones a la vez, el desambiguador determinista de [`scraper.py`](file:///c:/Users/Arthy/NLP/nlp2.0/Proyecto%20PLN/fase_1_recuperacion/scraper/scraper.py#L46-L150) le asigna de manera estricta la primera categoría encontrada según el orden de precedencia de feeds.
-  3. **Comprobación de distribución y desbalance:** Genera una tabla de contingencia con `pd.crosstab(df["category"], df["split"])` mostrando exactamente la repartición estratificada 70% `train` (3,251), 15% `dev` (697) y 15% `test` (697).
+  3. **Comprobación de distribución y desbalance:** Genera una tabla de contingencia con `pd.crosstab(df["category"], df["split"])` mostrando exactamente la repartición estratificada 70% `train` (4,645), 15% `dev` (996) y 15% `test` (996).
   4. **Cálculo del ratio de desbalance:** Compara la clase mayoritaria (`ciencia`: 738 noticias) frente a la minoritaria (`sociedad`: 374 noticias), arrojando un ratio de **$1.97\times$**, justificando matemáticamente por qué la métrica primaria del proyecto debe ser **Macro-F1** y no simple *Accuracy*.
 
 ---
@@ -130,7 +130,7 @@ A continuación se detalla cada función que interviene en la clasificación sup
 * **Lógica Interna y Funcionamiento Detallado:**
   1. **Orquestación del barrido factorial de 398 configuraciones:**
      Itera sistemáticamente a través de los directorios de matrices generados en el pipeline:
-     * **3 Normalizaciones:** `1 Tokenizado` (mínimo), `2 Stop words` (filtrado léxico), `3 Lematizado` (SpaCy `en_core_web_sm`).
+     * **Variantes de normalización:** tokenización, filtrado de stop words y lematización (SpaCy `en_core_web_sm`) en las carpetas vigentes `1. Combinado` y `2. Individual`.
      * **3 Ponderaciones:** `Binario`, `Frecuencia` (TF) y `TD IDF`.
      * **4 Rangos de N-gramas:** `unigramas`, `unigramas_bigramas`, `bigramas` y `unigramas_bigramas_trigramas`.
      * Espacios matriciales base: $3 \times 3 \times 4 = 36$ espacios de características.

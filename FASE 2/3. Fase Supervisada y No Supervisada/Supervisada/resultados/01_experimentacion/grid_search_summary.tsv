@@ -1,5 +1,5 @@
 model	best_params	cv_train_macro_f1	dev_accuracy	dev_macro_f1	time_s
-LogisticRegression	{'clf__C': 10.0, 'vect__ngram_range': (1, 2), 'vect__stop_words': 'english'}	0.6829	0.7446	0.7327	66.32
-LinearSVC	{'clf__C': 1.0, 'vect__ngram_range': (1, 2), 'vect__stop_words': 'english'}	0.6804	0.7331	0.7194	7.3
-MultinomialNB	{'clf__alpha': 0.1, 'vect__ngram_range': (1, 1), 'vect__stop_words': 'english'}	0.6699	0.7346	0.7188	9.57
-RandomForestClassifier+SVD	{'clf__max_depth': 15, 'clf__n_estimators': 100}	0.6126	0.6499	0.6325	37.32
+LinearSVC	{'clf__C': 2.0, 'vect__ngram_range': (1, 2), 'vect__stop_words': 'english'}	0.6905	0.741	0.7254	17.91
+LogisticRegression	{'clf__C': 10.0, 'vect__ngram_range': (1, 2), 'vect__stop_words': 'english'}	0.69	0.7249	0.707	137.72
+MultinomialNB	{'clf__alpha': 0.1, 'vect__ngram_range': (1, 1), 'vect__stop_words': 'english'}	0.6866	0.7129	0.6911	29.02
+RandomForestClassifier+SVD	{'clf__max_depth': 25, 'clf__n_estimators': 100}	0.6244	0.6747	0.6548	112.31

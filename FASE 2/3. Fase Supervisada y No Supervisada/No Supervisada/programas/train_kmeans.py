@@ -10,6 +10,9 @@ Evalúa Silhouette score, ARI y NMI. Genera los entregables oficiales en resulta
 """
 
 import json
+import gc
+import re
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -22,7 +25,14 @@ from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score, s
 TASK_DIR = Path(__file__).resolve().parents[1]
 ROOT_DIR = Path(__file__).resolve().parents[3]
 PREPROCESSING_RESULTS_DIR = ROOT_DIR / "2. Preprocesamiento (Scrapper, Normalizacion, Vectorial)" / "resultados"
-CORPUS_DIR = PREPROCESSING_RESULTS_DIR / "3 Lematizado" / "Frecuencia" / "Corpus KM01"
+# Ruta de compatibilidad para la representación lematizada vigente.
+CORPUS_DIR = (
+    PREPROCESSING_RESULTS_DIR
+    / "1. Combinado"
+    / "1.4 Stop words Lematizado"
+    / "Frecuencia"
+    / "unigramas"
+)
 DATA_PROCESSED_DIR = ROOT_DIR / "data" / "processed"
 MATRICES_DIR = ROOT_DIR / "fase_2_aprendizaje" / "matrices"
 RESULTADOS_DIR = TASK_DIR / "resultados"
@@ -53,7 +63,68 @@ def cargar_datos():
     return df
 
 
-def ejecutar_agrupamiento():
+def cargar_resultados_previos(log_path, mejor_silhouette=-1.0):
+    """Carga métricas completas de la ejecución anterior hasta U1325."""
+    if not log_path.exists():
+        return [], mejor_silhouette, None
+
+    norm_reverse = {
+        "tokenizado_minimo": "1. Combinado/1. Ind Tokenizado",
+        "stop_words": "1. Combinado/1.1 Comb Stop words",
+        "combinado_lemas": "1. Combinado/1.2 Comb Lematizado",
+        "tokenizado_lemas": "1. Combinado/1.3 Tokenizado Lematizado",
+        "stopwords_lemas": "1. Combinado/1.4 Stop words Lematizado",
+        "solo_stop_words": "2. Individual/2. Ind Stop words",
+        "solo_lematizado": "2. Individual/3. Ind Lematizado",
+    }
+    rep_dirs = {"binary": "Binario", "frecuencia": "Frecuencia", "tfidf": "TD IDF"}
+    patron = re.compile(
+        r"^\[(U\d+)\] (.+?) \| (binary|frecuencia|tfidf) "
+        r"(unigramas|bigramas|trigramas|unigramas_bigramas|"
+        r"unigramas_trigramas|bigramas_trigramas|unigramas_bigramas_trigramas)"
+        r" \| (KMeans(?:\+SVD\(\d+\))?) k=(\d+) -> Sil: ([+-]?\d+(?:\.\d+)?) "
+        r"\| ARI: ([+-]?\d+(?:\.\d+)?) \| NMI: ([+-]?\d+(?:\.\d+)?)$"
+    )
+    registros = []
+    mejor = None
+    for linea in log_path.read_text(encoding="utf-8").splitlines():
+        coincidencia = patron.search(linea)
+        if not coincidencia:
+            continue
+        exp_id, norm_label, rep_label, ngram, metodo, k, sil, ari, nmi = coincidencia.groups()
+        num = int(exp_id[1:])
+        if num > 1325:
+            continue
+
+        reg = {
+            "experiment_id": exp_id,
+            "task": "clustering",
+            "configuration_role": "baseline" if norm_label == "tokenizado_minimo" else "processed",
+            "normalization": norm_label,
+            "representation": f"{rep_label} {ngram}",
+            "method": metodo,
+            "hyperparameters": f"k={k}, init=k-means++, n_init=10, max_iter=300, random_state=0",
+            "silhouette": float(sil),
+            "ari": float(ari),
+            "nmi": float(nmi),
+            "selected": "no",
+            "k": int(k),
+        }
+        norm_dir = norm_reverse.get(norm_label)
+        rep_dir = rep_dirs.get(rep_label)
+        if norm_dir and rep_dir:
+            reg["mat_path"] = str(PREPROCESSING_RESULTS_DIR / norm_dir / rep_dir / ngram)
+        registros.append(reg)
+
+        if float(sil) > mejor_silhouette:
+            mejor_silhouette = float(sil)
+            mejor = dict(reg)
+            mejor["k"] = int(k)
+            mejor["svd_dim"] = 100 if "+SVD(" in metodo else None
+    return registros, mejor_silhouette, mejor
+
+
+def ejecutar_agrupamiento(resume_from=1, resume_to=1470):
     """Entrena K-Means, compara configuraciones y genera los entregables no supervisados."""
     print("=" * 80)
     print("INICIANDO AGRUPAMIENTO NO SUPERVISADO CON K-MEANS (FASE 2)")
@@ -67,10 +138,16 @@ def ejecutar_agrupamiento():
     y_train = df_docs.loc[train_mask, "category"].values
     y_dev = df_docs.loc[dev_mask, "category"].values
 
-    experimentos = []
-    exp_counter = 1
+    log_prev = (
+        RESULTADOS_DIR
+        / "01_experimentacion"
+        / "kmeans_execution_log.txt"
+    )
+    experimentos, mejor_silhouette, mejores_config = cargar_resultados_previos(log_prev)
+    exp_counter = resume_from
 
     normalizaciones = {
+        # Las claves son rutas reales del preprocesamiento.
         "1. Combinado/1. Ind Tokenizado": "tokenizado_minimo",
         "1. Combinado/1.1 Comb Stop words": "stop_words",
         "1. Combinado/1.2 Comb Lematizado": "combinado_lemas",
@@ -95,18 +172,17 @@ def ejecutar_agrupamiento():
     )
 
     configuraciones_matriz = [
+        # Producto cartesiano: siete preprocesamientos × tres representaciones × siete n-gramas.
         (norm_dir, norm_label, rep_dir, rep_label, ngram)
         for norm_dir, norm_label in normalizaciones.items()
         for rep_dir, rep_label in representaciones.items()
         for ngram in combinaciones_ngramas
     ]
 
-    mejores_config = None
-    mejor_silhouette = -1.0
     modelos_entrenados = {}
 
     # Se evalúa cada combinación de normalización, representación y n-gramas.
-    for norm_dir, norm_label, rep_dir, rep_label, ngram in configuraciones_matriz:
+    for matriz_index, (norm_dir, norm_label, rep_dir, rep_label, ngram) in enumerate(configuraciones_matriz):
         mat_path = PREPROCESSING_RESULTS_DIR / norm_dir / rep_dir / ngram
         if not (mat_path / "X_train.npz").exists():
             continue
@@ -133,17 +209,29 @@ def ejecutar_agrupamiento():
             # Se prueban distintos tamaños de agrupamiento.
             for k in [4, 6, 8, 10, 12]:
                 # Cada k representa una hipótesis distinta sobre el número de grupos.
+                if exp_counter > resume_to:
+                    break
                 exp_id = f"U{exp_counter:02d}"
                 exp_counter += 1
+                if int(exp_id[1:]) < resume_from:
+                    continue
 
                 km = KMeans(n_clusters=k, init="k-means++", n_init=10, max_iter=300, random_state=SEMILLA)
+                # Las etiquetas no se pasan a fit: el agrupamiento aprende solo de X_tr.
                 km.fit(X_tr)
 
                 preds_dev = km.predict(X_dv)
 
-                # Silhouette score (en dev)
-                sil = silhouette_score(X_dv, preds_dev)
+                # Silhouette requiere al menos dos clústeres y menos que
+                # el número total de documentos. Una configuración degenerada
+                # se registra sin puntuar Silhouette para continuar el barrido.
+                etiquetas_unicas = np.unique(preds_dev)
+                if 2 <= len(etiquetas_unicas) < len(preds_dev):
+                    sil = silhouette_score(X_dv, preds_dev)
+                else:
+                    sil = -1.0
                 # Métricas externas contra categorías gold (solo para evaluación metodológica)
+                # ARI y NMI nunca intervienen en fit ni en la selección intrínseca.
                 ari = adjusted_rand_score(y_dev, preds_dev)
                 nmi = normalized_mutual_info_score(y_dev, preds_dev)
 
@@ -154,25 +242,50 @@ def ejecutar_agrupamiento():
                     "normalization": norm_label,
                     "representation": f"{rep_label} {ngram}",
                     "method": metodo_desc,
-                    "hyperparameters": f"k={k}, n_init=10, max_iter=300",
+                    "hyperparameters": (
+                        f"k={k}, init=k-means++, n_init=10, "
+                        f"max_iter=300, random_state={SEMILLA}"
+                    ),
                     "silhouette": round(sil, 4),
                     "ari": round(ari, 4),
                     "nmi": round(nmi, 4),
                     "selected": "no",
                     "mat_path": str(mat_path),
-                    "svd": svd,
-                    "km": km,
                     "k": k,
-                    "X_tr": X_tr,
-                    "X_dv": X_dv,
-                    "vocab": vocab,
                 }
                 experimentos.append(reg)
                 print(f"[{exp_id}] {norm_label} | {rep_label} {ngram} | {metodo_desc} k={k:2d} -> Sil: {sil:.4f} | ARI: {ari:.4f} | NMI: {nmi:.4f}")
 
+                if exp_counter % 25 == 0:
+                    checkpoint_df = pd.DataFrame(experimentos)[
+                        ["experiment_id", "task", "configuration_role", "normalization",
+                         "representation", "method", "hyperparameters", "silhouette",
+                         "ari", "nmi", "selected"]
+                    ]
+                    checkpoint_path = EXPERIMENTACION_DIR / "clustering_experiments_checkpoint.tsv"
+                    checkpoint_df.to_csv(checkpoint_path, sep="\t", index=False)
+
+                # El mejor Silhouette en dev define la configuración seleccionada.
                 if sil > mejor_silhouette:
                     mejor_silhouette = sil
                     mejores_config = reg
+                    mejores_config["vocab"] = vocab
+                    mejores_config["svd"] = svd
+                    mejores_config["km"] = km
+                    mejores_config["k"] = k
+
+                del km
+                del preds_dev
+                gc.collect()
+
+            del X_tr
+            del X_dv
+            gc.collect()
+
+        del X_train
+        del X_dev
+        del vocab
+        gc.collect()
 
     if mejores_config is None:
         raise RuntimeError("No se encontró ninguna matriz válida para evaluar K-Means.")
@@ -223,15 +336,21 @@ def ejecutar_agrupamiento():
     print(f"\n[OK] Registro de {len(exp_df)} experimentos guardado en: {exp_tsv_path}")
 
     # 2. Generar predicciones en todo el corpus (train, dev, test) para el modelo seleccionado
-    sel_km = mejores_config["km"]
-    sel_svd = mejores_config["svd"]
+    # Se reutilizan los mismos centroides; test no participa en el ajuste.
     sel_mat_path = Path(mejores_config["mat_path"])
 
     X_train_full = load_npz(sel_mat_path / "X_train.npz")
     X_dev_full = load_npz(sel_mat_path / "X_dev.npz")
     X_test_full = load_npz(sel_mat_path / "X_test.npz")
 
-    if sel_svd is not None:
+    sel_svd = None
+    if mejores_config.get("svd_dim") is not None:
+        sel_svd = TruncatedSVD(n_components=mejores_config["svd_dim"], random_state=SEMILLA)
+        X_tr_proj = sel_svd.fit_transform(X_train_full)
+        X_dv_proj = sel_svd.transform(X_dev_full)
+        X_ts_proj = sel_svd.transform(X_test_full)
+    elif mejores_config.get("svd") is not None:
+        sel_svd = mejores_config["svd"]
         X_tr_proj = sel_svd.transform(X_train_full)
         X_dv_proj = sel_svd.transform(X_dev_full)
         X_ts_proj = sel_svd.transform(X_test_full)
@@ -239,6 +358,18 @@ def ejecutar_agrupamiento():
         X_tr_proj = X_train_full
         X_dv_proj = X_dev_full
         X_ts_proj = X_test_full
+
+    if mejores_config.get("km") is not None:
+        sel_km = mejores_config["km"]
+    else:
+        sel_km = KMeans(
+            n_clusters=mejores_config["k"],
+            init="k-means++",
+            n_init=10,
+            max_iter=300,
+            random_state=SEMILLA,
+        )
+        sel_km.fit(X_tr_proj)
 
     preds_tr = sel_km.predict(X_tr_proj)
     preds_dv = sel_km.predict(X_dv_proj)
@@ -271,7 +402,9 @@ def ejecutar_agrupamiento():
     print(f"[OK] Entregable oficial guardado en: {clustering_results_path} ({len(df_clustering_results)} documentos clasificados)")
 
     # 3. Interpretación de Clústeres: Top 10 palabras y 2 documentos representativos
-    vocab = mejores_config["vocab"]
+    vocab = mejores_config.get("vocab")
+    if vocab is None:
+        vocab = pd.read_csv(sel_mat_path / "vocabulario.tsv", sep="\t")["term"].values
     if sel_svd is not None:
         # Proyectar centroides SVD al espacio léxico original: (k, d) @ (d, V) -> (k, V)
         orig_centroids = np.dot(sel_km.cluster_centers_, sel_svd.components_)
@@ -357,5 +490,9 @@ def ejecutar_agrupamiento():
 
 
 if __name__ == "__main__":
-    ejecutar_agrupamiento()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--resume-from", type=int, default=1326)
+    parser.add_argument("--resume-to", type=int, default=1470)
+    args = parser.parse_args()
+    ejecutar_agrupamiento(resume_from=args.resume_from, resume_to=args.resume_to)
 

@@ -1,0 +1,2 @@
+baseline_role	baseline_experiment_id	baseline_method	baseline_representation	baseline_hyperparameters	baseline_macro_f1	champion_experiment_id	champion_method	champion_representation	champion_hyperparameters	champion_macro_f1	macro_f1_delta
+only_tokenization	C110	LogisticRegression	tfidf unigramas_bigramas	C=10.0	0.7149	C238	LinearSVC	tfidf unigramas_bigramas	C=1.0	0.727	0.0121

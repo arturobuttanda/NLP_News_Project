@@ -11,7 +11,7 @@ Plan de trabajo basado en la [consigna de la Etapa II](Recursos/Proyecto_01_Noti
 
 ## 1. Preparar el corpus y fijar las particiones
 
-El [corpus original de Fase I](../FASE%201/1.%20Scrapper/Resultados/news_raw_corpus.tsv) contiene 2,157 noticias. La preparación de Fase II se ejecutó sobre la [instantánea ampliada de KM01](Pipeline%20procesamiento/resultados/3%20Lematizado/Frecuencia/Corpus%20KM01/news_raw_corpus.tsv), con **4,645 noticias** repartidas en **3,251 de train, 697 de dev y 697 de test**. Las variantes comparten los IDs y las particiones de esa instantánea.
+El [corpus actual de Fase I](../FASE%201/1.%20Scrapper/news_raw_corpus.tsv) contiene **6,637 noticias**. La preparación de Fase II conserva los 6,637 documentos y los reparte en **4,645 de train, 996 de dev y 996 de test** mediante particiones estratificadas con semilla 0.
 
 - Conservar `id` como `document_id`. Construir `text` concatenando `title` y `description` originales y usar `category` como etiqueta supervisada. Guardar `source`, `date` y `url` como metadatos para inspección.
 - Documentar que la categoría proviene del feed RSS y que, según el scraper, se conserva la del primer feed que aporta la noticia. Revisar ejemplos ambiguos y registrar el criterio aplicado. En el análisis de errores, distinguir una confusión del modelo de una noticia que encaja en varias categorías.
@@ -72,9 +72,8 @@ FASE 2/
   Pipeline procesamiento/
     Programas/              Código e instrucciones del pipeline
     resultados/
-      1 Tokenizado/
-      2 Stop words/
-      3 Lematizado/         Cada variante tiene N-gramas, Binario, Frecuencia y TD IDF
+      1. Combinado/         Variantes combinadas de tokenización, stop words y lematización
+      2. Individual/        Variantes individuales con sus representaciones vectoriales
   Kmeans/                   Línea base KM01 y sus resultados
 ```
 

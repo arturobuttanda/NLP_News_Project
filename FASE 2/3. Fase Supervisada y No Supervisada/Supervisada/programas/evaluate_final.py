@@ -27,7 +27,14 @@ from sklearn.metrics import (
 TASK_DIR = Path(__file__).resolve().parents[1]
 ROOT_DIR = Path(__file__).resolve().parents[3]
 PREPROCESSING_RESULTS_DIR = ROOT_DIR / "2. Preprocesamiento (Scrapper, Normalizacion, Vectorial)" / "resultados"
-CORPUS_DIR = PREPROCESSING_RESULTS_DIR / "3 Lematizado" / "Frecuencia" / "Corpus KM01"
+# Ruta de compatibilidad para la representación lematizada vigente.
+CORPUS_DIR = (
+    PREPROCESSING_RESULTS_DIR
+    / "1. Combinado"
+    / "1.4 Stop words Lematizado"
+    / "Frecuencia"
+    / "unigramas"
+)
 DATA_PROCESSED_DIR = ROOT_DIR / "data" / "processed"
 RESULTADOS_DIR = TASK_DIR / "resultados"
 EXPERIMENTACION_DIR = RESULTADOS_DIR / "01_experimentacion"
@@ -57,7 +64,8 @@ def evaluar_en_test():
         sys.exit(1)
 
     df_exp = pd.read_csv(exp_path, sep="\t")
-    # Buscar el campeón seleccionado con mayor F1
+    # Selección global: solo se consideran los mejores marcados por familia.
+    # Test no participa en esta selección.
     seleccionados = df_exp[df_exp["selected"] == "yes"].copy()
     if seleccionados.empty:
         seleccionados = df_exp.copy()
@@ -133,7 +141,7 @@ def evaluar_en_test():
     test_doc_ids = df_docs.loc[df_docs["split"] == "test", "document_id"].values
     classes = sorted(list(set(y_train)))
 
-    # Unión estricta: test permanece fuera del ajuste.
+    # Unión estricta: se concatenan train y dev, pero test permanece fuera del ajuste.
     X_train_dev = vstack([X_train, X_dev])
     y_train_dev = np.concatenate([y_train, y_dev])
     print(f"Matriz reentrenamiento (train + dev): {X_train_dev.shape}")
@@ -154,6 +162,7 @@ def evaluar_en_test():
         raise ValueError(f"Método desconocido: {metodo}")
 
     print(f"Ajustando {metodo} sobre train + dev...")
+    # Los hiperparámetros congelados se usan, pero el modelo final aprende una vez más.
     modelo_final.fit(X_train_dev, y_train_dev)
 
     print("Evaluando predicciones sobre test...")
